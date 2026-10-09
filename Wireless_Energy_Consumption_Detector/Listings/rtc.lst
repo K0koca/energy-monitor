@@ -1,0 +1,95 @@
+C251 COMPILER V5.60.0,  rtc                                                                25/05/26  11:17:20  PAGE 1   
+
+
+C251 COMPILER V5.60.0, COMPILATION OF MODULE rtc
+OBJECT MODULE PLACED IN .\Objects\rtc.obj
+COMPILER INVOKED BY: E:\Eng_Software\Keil_v5\C251\BIN\C251.EXE Sources\rtc.c XSMALL BROWSE INCDIR(D:\1DKN\big4\Wireless_
+                    -Energy_Consumption_Detector\Sources\inc) DEBUG PRINT(.\Listings\rtc.lst) TABS(2) OBJECT(.\Objects\rtc.obj) 
+
+stmt  level    source
+
+    1          //<<AICUBE_USER_HEADER_REMARK_BEGIN>>
+    2          ////////////////////////////////////////
+    3          // 在此添加用户文件头说明信息  
+    4          // 文件名称: rtc.c
+    5          // 文件描述: 
+    6          // 文件版本: V1.0
+    7          // 修改记录:
+    8          //   1. (2026-05-03) 创建文件
+    9          ////////////////////////////////////////
+   10          //<<AICUBE_USER_HEADER_REMARK_END>>
+   11          
+   12          
+   13          #include "config.h"
+   14          
+   15          
+   16          //<<AICUBE_USER_INCLUDE_BEGIN>>
+   17          // 在此添加用户头文件包含  
+   18          //<<AICUBE_USER_INCLUDE_END>>
+   19          
+   20          
+   21          //<<AICUBE_USER_GLOBAL_DEFINE_BEGIN>>
+   22          // 在此添加用户全局变量定义、用户宏定义以及函数声明  
+   23          //<<AICUBE_USER_GLOBAL_DEFINE_END>>
+   24          
+   25          
+   26          
+   27          ////////////////////////////////////////
+   28          // RTC初始化函数
+   29          // 入口参数: 无
+   30          // 函数返回: 无
+   31          ////////////////////////////////////////
+   32          void RTC_Init(void)
+   33          {
+   34   1          RTC_CLK_LIRC();                     //RTC使用内部低速LIRC当作时钟源
+   35   1      
+   36   1          RTC_SetYear(26);                    //设置RTC的年
+   37   1          RTC_SetMonth(5);                    //设置RTC的月
+   38   1          RTC_SetDay(3);                      //设置RTC的日
+   39   1          RTC_SetHour(8);                     //设置RTC的小时
+   40   1          RTC_SetMinute(59);                  //设置RTC的分钟
+   41   1          RTC_SetSecond(55);                  //设置RTC的秒
+   42   1          RTC_SetSSecond(0);                  //初始化RTC的次秒
+   43   1      
+   44   1          RTC_Run();                          //启动RTC
+   45   1          RTC_SyncInitial();                  //同步RTC的初始值
+   46   1          while (RTC_IsSyncing());            //等待同步完成
+   47   1      
+   48   1          //<<AICUBE_USER_RTC_INITIAL_BEGIN>>
+   49   1          // 在此添加用户初始化代码  
+   50   1          //<<AICUBE_USER_RTC_INITIAL_END>>
+   51   1      }
+   52          
+   53          
+   54          
+   55          //<<AICUBE_USER_FUNCTION_IMPLEMENT_BEGIN>>
+   56          // 在此添加用户函数实现代码  
+   57          //<<AICUBE_USER_FUNCTION_IMPLEMENT_END>>
+   58          
+C251 COMPILER V5.60.0,  rtc                                                                25/05/26  11:17:20  PAGE 2   
+
+   59          
+
+
+Module Information          Static   Overlayable
+------------------------------------------------
+  code size            =       117     ------
+  ecode size           =    ------     ------
+  data size            =    ------     ------
+  idata size           =    ------     ------
+  pdata size           =    ------     ------
+  xdata size           =    ------     ------
+  xdata-const size     =    ------     ------
+  edata size           =    ------     ------
+  bit size             =    ------     ------
+  ebit size            =    ------     ------
+  bitaddressable size  =    ------     ------
+  ebitaddressable size =    ------     ------
+  far data size        =    ------     ------
+  huge data size       =    ------     ------
+  const size           =    ------     ------
+  hconst size          =    ------     ------
+End of Module Information.
+
+
+C251 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,11 @@
+#coding=utf-8
+#中文声明注释一定在第一行
+time=input('请输入次数：')
+print('吃饭次数：'+time)
+time=int(time)
+print('吃饭次数：',time)
+'''
+godamn
+nanana
+'''
+print('hello')

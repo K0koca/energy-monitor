@@ -1,0 +1,56 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "① 运行 swj.py（能耗监控主界面）",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}\\上位机\\swj.py",
+      "cwd": "${workspaceFolder}\\上位机",
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}\\上位机;${workspaceFolder}\\上位机\\llm_energy_agent",
+        "PYTHONIOENCODING": "utf-8"
+      }
+    },
+    {
+      "name": "② 独立预览 AI 面板（不接 swj.py）",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}\\上位机\\llm_energy_agent\\ai_panel.py",
+      "cwd": "${workspaceFolder}\\上位机\\llm_energy_agent",
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "env": {
+        "PYTHONIOENCODING": "utf-8"
+      }
+    },
+    {
+      "name": "③ 命令行：生成简报",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}\\上位机\\llm_energy_agent\\cli.py",
+      "args": ["daily", "--out", "report_daily.md"],
+      "cwd": "${workspaceFolder}\\上位机\\llm_energy_agent",
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "env": {
+        "PYTHONIOENCODING": "utf-8"
+      }
+    },
+    {
+      "name": "④ 命令行：离线自测提问（不用 Key）",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}\\上位机\\llm_energy_agent\\cli.py",
+      "args": ["--provider", "mock", "ask", "最近一次采集里功率有没有超限？"],
+      "cwd": "${workspaceFolder}\\上位机\\llm_energy_agent",
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "env": {
+        "PYTHONIOENCODING": "utf-8"
+      }
+    }
+  ]
+}

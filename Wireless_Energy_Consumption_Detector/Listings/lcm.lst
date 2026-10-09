@@ -1,0 +1,269 @@
+C251 COMPILER V5.60.0,  lcm                                                                25/05/26  11:17:20  PAGE 1   
+
+
+C251 COMPILER V5.60.0, COMPILATION OF MODULE lcm
+OBJECT MODULE PLACED IN .\Objects\lcm.obj
+COMPILER INVOKED BY: E:\Eng_Software\Keil_v5\C251\BIN\C251.EXE Sources\lcm.c XSMALL BROWSE INCDIR(D:\1DKN\big4\Wireless_
+                    -Energy_Consumption_Detector\Sources\inc) DEBUG PRINT(.\Listings\lcm.lst) TABS(2) OBJECT(.\Objects\lcm.obj) 
+
+stmt  level    source
+
+    1          
+    2          #include "config.h"
+    3          
+    4          
+    5          #define LCM_M68_I80   1   //TFT²ÊÆÁ½Ó¿ÚÊý¾ÝÄ£Ê½Ñ¡ÔñÎ»(bit0), 0: I8080Ä£Ê½£¬1:M6800Ä£Ê½
+    6          #define LCMHOLDT    3   //TFT²ÊÆÁ½Ó¿ÚÊý¾Ý±£³ÖÊ±¼ä¿ØÖÆÎ»(bit1~bit0), 0~3, ¶ÔÓ¦1~4¸öLCMIFÊ±ÖÓ
+    7          
+    8          /*IO¶¨Òå*/
+    9            sbit  LCD_RS  = P4^5;
+   10            sbit  LCD_RW  = P3^6;
+   11            sbit  LCD_E = P3^7;
+   12            sbit  LCD_RST = P4^7;
+   13            #define LCD_Data  P2
+   14          
+   15          
+   16          
+   17          
+   18          //±¾µØ±äÁ¿ÉùÃ÷
+   19          u16 LCM_TxCnt;    //LCM DMA´¥·¢·¢ËÍ´ÎÊý, Ò»´Î16×Ö½Ú, Ò»¹²64´Î
+   20          bit B_LCM_DMA_busy; //LCM DMAÃ¦±êÖ¾£¬Ê¹ÓÃÇ°È·ÈÏ´Ë±êÖ¾Îª0
+   21          u16 LCM_TxAddr;   //LCM DMAÒª·¢ËÍÊý¾ÝµÄÊ×µØÖ·
+   22          bit B_TxCmd;    //ÒÑ·¢ËÍÃüÁî±êÖ¾
+   23          u8  xdata CmdTmp[2];  //ÃüÁî»º³å
+   24          u8  xdata DisTmp[1024] _at_ 0x0000; //ÏÔÊ¾»º³å£¬½«ÒªÏÔÊ¾µÄÄÚÈÝ·ÅÔÚÏÔ´æÀï£¬Æô¶¯DMA¼´¿É
+   25          uint8_t xdata pu8LCMDMATxBuffer[LCM_DMASIZE]; //LCM DMA·¢ËÍ»º³åÇøÊý×é
+   26          
+   27          
+   28          // ÃèÊö: LCMÅäÖÃº¯Êý¡£ST7920 @540KHz£¬ÇåÆÁÖ¸ÁîµäÐÍÊ±¼äÎª1.6ms£¬¶ÁÃ¦ÐÅºÅ0us, Ð´Èë¡¢¶Á³öÊý¾Ý¡¢ÃüÁî72us. ±¾À
+             -ý×ÓDMAË¢ÐÂÊ±¼ä84ms @24MHz.
+   29          
+   30          //LCM½Ó¿ÚÅäÖÃ¼Ä´æÆ÷
+   31          #define LCMIFIE     (0<<7)  //TFT²ÊÆÁ½Ó¿ÚÖÐ¶ÏÊ¹ÄÜ¿ØÖÆÎ»(bit7), 1->ÔÊÐíÖÐ¶Ï£¬0->½ûÖ¹
+   32          #define LCMIFIP     (0<<4)  //TFT²ÊÆÁ½Ó¿ÚÖÐ¶ÏÓÅÏÈ¼¶¿ØÖÆÎ»(bit5~bit4), (×îµÍ)0~3(×î¸ß).
+   33          #define LCMIFDPS    (0<<2)  //TFT²ÊÆÁ½Ó¿ÚÊý¾Ý½ÅÑ¡ÔñÎ»(bit3~bit2), D18_D8=0: 0»ò2->8Î»Êý¾ÝÔÚP2, D18_D8=1: 0: 
+             -P2-¸ß×Ö½Ú, P0µÍ×Ö½Ú, 2: P2-¸ß×Ö½Ú,µÍ×Ö½ÚP0[7:4] P4.7 P4.6 P4.3 P4.1.
+   34          #define LCM_D16_D8    (0<<1)  //TFT²ÊÆÁ½Ó¿ÚÊý¾Ý¿í¶È¿ØÖÆÎ»(bit1), 0: 8Î»Êý¾Ý£¬1:16Î»Êý¾Ý
+   35          #define LCM_M68_I80   1   //TFT²ÊÆÁ½Ó¿ÚÊý¾ÝÄ£Ê½Ñ¡ÔñÎ»(bit0), 0: I8080Ä£Ê½£¬1:M6800Ä£Ê½
+   36          
+   37          //LCM½Ó¿ÚÅäÖÃ¼Ä´æÆ÷2
+   38          #define LCMIFCPS    (1<<5)  //TFT²ÊÆÁ½Ó¿Ú¿ØÖÆ½ÅÑ¡ÔñÎ»(bit6~bit5), RS RD(E) WR(RW), 0->P4.5 P4.4 P4.2£¬1->P4.
+             -5 P3.7 P3.6, 2->P4.0 P4.4 P4.2, 3->P4.0 P3.7 P3.6
+   39          #define LCMSETUPT   (4<<2)  //TFT²ÊÆÁ½Ó¿ÚÊý¾Ý½¨Á¢Ê±¼ä¿ØÖÆÎ»(bit4~bit2), 0~7, ¶ÔÓ¦1~8¸öLCMIFÊ±ÖÓ, ¶ÔÓÚ6800Ä£
+             -Ê½¾ÍÊÇE¸ßµçÆ½Ê±¼ä, ÖÁÉÙ20us.
+   40          #define LCMHOLDT    3   //TFT²ÊÆÁ½Ó¿ÚÊý¾Ý±£³ÖÊ±¼ä¿ØÖÆÎ»(bit1~bit0), 0~3, ¶ÔÓ¦1~4¸öLCMIFÊ±ÖÓ
+   41          
+   42          //LCM½Ó¿Ú¿ØÖÆ¼Ä´æÆ÷
+   43          #define ENLCMIF     (1<<7)  //TFT²ÊÆÁ½Ó¿ÚÊ¹ÄÜ¿ØÖÆÎ»(bit7), 1->ÔÊÐíTFT²ÊÆÁ½Ó¿Ú¹¦ÄÜ, 0->½ûÖ¹
+   44          #define LCM_WRCMD   4   //4->Ð´ÃüÁî
+   45          #define LCM_WRDAT   5   //5->Ð´Êý¾Ý
+   46          #define LCM_RDCMD   6   //6->¶ÁÃüÁî/×´Ì¬
+   47          #define LCM_RDDAT   7   //7->¶ÁÊý¾Ý
+   48          
+   49          void LCM_Config(void)
+   50          {
+   51   1        LCMIFCFG  = LCMIFIE  | LCMIFIP   | LCMIFDPS | LCM_D16_D8 | LCM_M68_I80;
+   52   1        LCMIFCFG2 = LCMIFCPS | LCMSETUPT | LCMHOLDT;  //RS:P45,E:P37,RW:P36; Setup Time,HOLD Time
+   53   1        LCMIFSTA  = 0x00; //ÖÐ¶ÏÇëÇó±êÖ¾£¬Èí¼þÇå0
+   54   1        LCMIFPSCR = (u8)(MAIN_Fosc/250000UL-1); //TFT²ÊÆÁ½Ó¿ÚÊ±ÖÓÔ¤·ÖÆµ
+C251 COMPILER V5.60.0,  lcm                                                                25/05/26  11:17:20  PAGE 2   
+
+   55   1        LCMIFCR   = ENLCMIF;
+   56   1      }
+   57          
+   58          
+   59          
+   60          // ÃèÊö: LCM DMAÅäÖÃº¯Êý¡£
+   61          
+   62          //LCM_DMA¿ØÖÆ¼Ä´æÆ÷
+   63          #define   DMA_ENLCM (1<<7)  //LCM DMA¹¦ÄÜÊ¹ÄÜ¿ØÖÆÎ»
+   64          #define   LCM_TRIGWC  (1<<6)  //LCM DMA´¥·¢Ð´ÃüÁî
+   65          #define   LCM_TRIGWD  (1<<5)  //LCM DMA´¥·¢Ð´Êý¾Ý
+   66          #define   LCM_TRIGRC  (1<<4)  //LCM DMA´¥·¢¶ÁÃüÁî
+   67          #define   LCM_TRIGRD  (1<<3)  //LCM DMA´¥·¢¶ÁÊý¾Ý
+   68          #define   LCM_CLRFIFO 0   // Çå³ýLCM DMA½ÓÊÕFIFO¿ØÖÆÎ»
+   69          
+   70          //LCM_DMAÅäÖÃ¼Ä´æÆ÷
+   71          #define   DMA_LCMIE (1<<7)  //LCM DMAÖÐ¶ÏÊ¹ÄÜ¿ØÖÆÎ»
+   72          #define   DMA_LCMIP (0<<2)  //LCM DMAÖÐ¶ÏÓÅÏÈ¼¶¿ØÖÆÎ»
+   73          #define   DMA_LCMPTY  0   //LCM DMAÊý¾Ý×ÜÏß·ÃÎÊÓÅÏÈ¼¶¿ØÖÆÎ»
+   74          
+   75          //LCM_DMA×´Ì¬¼Ä´æÆ÷
+   76          #define   LCM_TXOVW (1<<1)  // LCM DMAÊý¾Ý¸²¸Ç±êÖ¾Î»
+   77          #define   DMA_LCMIF 1   // LCM DMAÖÐ¶ÏÇëÇó±êÖ¾Î»
+   78          
+   79          void DMA_Config(u8 xdata *pic)
+   80          {
+   81   1        WriteCommandLCD(0x36);      //Ñ¡ÔñÀ©³äÖ¸Áî¼¯, ÏÔÊ¾Í¼ÐÎ
+   82   1      
+   83   1        LCM_TxAddr   = (u16)pic;    //Òª·¢ËÍÊý¾ÝµÄÊ×µØÖ·
+   84   1        DMA_LCM_STA  = 0x00;
+   85   1        DMA_LCM_CFG  = DMA_LCMIE | DMA_LCMIP | DMA_LCMPTY;;
+   86   1        DMA_LCM_ITVH = 0; //ÉèÖÃ´«Êä¼ä¸ôÊ±¼ä(¸ß8Î»)
+   87   1        DMA_LCM_ITVL = 9-1; //ÉèÖÃ´«Êä¼ä¸ôÊ±¼ä(µÍ8Î»)
+   88   1      
+   89   1        B_TxCmd   = 0;    //ÒÑ·¢ËÍÃüÁî±êÖ¾
+   90   1        LCM_TxCnt = 0;    //LCM DMA´¥·¢·¢ËÍ´ÎÊý, Ò»´Î16×Ö½Ú, Ò»¹²64´Î
+   91   1        B_LCM_DMA_busy = 1; //±êÖ¾LCM-DMAÃ¦£¬LCM DMAÖÐ¶ÏÖÐÇå³ý´Ë±êÖ¾£¬Ê¹ÓÃLCM DMAÇ°ÒªÈ·ÈÏ´Ë±êÖ¾Îª0
+   92   1        DMA_LCM_STA = DMA_LCMIF;  //Èí¼þ´¥·¢LCM DMAÖÐ¶Ï£¬Æô¶¯·¢ËÍ
+   93   1      }
+   94          
+   95          void LCMIF_DMA_ISR(void) interrupt DMA_LCM_VECTOR
+   96          {
+   97   1        if(DMA_LCM_STA & DMA_LCMIF)
+   98   1        {
+   99   2          if(LCM_TxCnt >= 64) //ÅÐ¶Ï·¢ËÍÊÇ·ñÍê±Ï
+  100   2          {
+  101   3            DMA_LCM_CR = 0;
+  102   3            B_LCM_DMA_busy = 0;   //Çå³ýLCM-DMAÃ¦±êÖ¾
+  103   3          }
+  104   2          else    
+  105   2          {
+  106   3            if(!B_TxCmd)  //ÏÈ·¢ÉèÖÃµØÖ·ÃüÁî
+  107   3            {
+  108   4              B_TxCmd = 1;  
+  109   4              if(LCM_TxCnt <32)   //ÉÏ°ëÆÁ
+  110   4              {
+  111   5                CmdTmp[0] = (u8)(0x80+LCM_TxCnt); //ÁÐµØÖ·
+  112   5                CmdTmp[1] = 0x80;         //ÐÐµØÖ·£¬ÉÏ°ëÆÁµØÖ·0X80
+  113   5              }
+  114   4              else   //ÏÂ°ëÆÁ
+  115   4              {
+  116   5                CmdTmp[0] = (u8)(0x80+LCM_TxCnt-32);  //ÁÐµØÖ·
+  117   5                CmdTmp[1] = 0x88;           //ÐÐµØÖ·£¬ÏÂ°ëÆÁµØÖ·0X88
+  118   5              }
+  119   4              DMA_LCM_TXAH = (u8)((u16)CmdTmp >> 8);  //LCM DMA·¢ËÍÃüÁîÊ×µØÖ·
+  120   4              DMA_LCM_TXAL = (u8)CmdTmp;
+C251 COMPILER V5.60.0,  lcm                                                                25/05/26  11:17:20  PAGE 3   
+
+  121   4              DMA_LCM_AMTH = 0;       //ÉèÖÃ´«Êä×Ü×Ö½ÚÊý(¸ß8Î»)
+  122   4              DMA_LCM_AMT  = 2-1;       //ÉèÖÃ´«Êä×Ü×Ö½ÚÊý(µÍ8Î»).
+  123   4              DMA_LCM_CR   = DMA_ENLCM | LCM_TRIGWC;  //Æô¶¯LCM DMA·¢ËÍÃüÁî
+  124   4            }
+  125   3            else
+  126   3            {
+  127   4              B_TxCmd = 0;  //Çå³ýÒÑ·¢µØÖ·ÃüÁî
+  128   4              DMA_LCM_TXAH = (u8)(LCM_TxAddr >> 8); //LCM DMA·¢ËÍÊý¾ÝÊ×µØÖ·
+  129   4              DMA_LCM_TXAL = (u8)LCM_TxAddr;
+  130   4              DMA_LCM_AMTH = 0;       //ÉèÖÃ´«Êä×Ü×Ö½ÚÊý(¸ß8Î»),  ÉèÖÃ´«Êä×Ü×Ö½ÚÊý = N+1
+  131   4              DMA_LCM_AMT  = 16-1;      //ÉèÖÃ´«Êä×Ü×Ö½ÚÊý(µÍ8Î»).
+  132   4              DMA_LCM_CR   = DMA_ENLCM | LCM_TRIGWD;  //Æô¶¯LCM DMA·¢ËÍÊý¾Ý
+  133   4              LCM_TxAddr  += 16;  //Òª·¢ËÍÊý¾ÝµÄÊ×µØÖ·, Ò»´ÎDMA´«Êä16×Ö½Ú
+  134   4              LCM_TxCnt++;    //·¢ËÍ´ÎÊý+1
+  135   4            }
+  136   3          }
+  137   2        }
+  138   1        DMA_LCM_STA = 0;
+  139   1      }
+  140          
+  141          //¶Á×´Ì¬
+  142          void ReadStatusLCD(void)
+  143          {
+  144   1      //  LCD_Data = 0xFF;
+  145   1        LCMIFSTA = 0; //Çå³ýÍê³É±êÖ¾
+  146   1          do
+  147   1          {
+  148   2          LCMIFCR   = ENLCMIF | LCM_RDCMD;  //¶Á×´Ì¬
+  149   2          while((LCMIFSTA & 1) == 0)  ; //µÈ´ý¶ÁÍê³É
+  150   2          LCMIFSTA = 0; //Çå³ýÍê³É±êÖ¾
+  151   2          LCD_E = 0;
+  152   2          }while(LCMIFDATL & 0x80); 
+  153   1      }
+  154          
+  155          
+  156          //Ð´Êý¾Ý
+  157          void WriteDataLCD(u8 WDLCD)
+  158          {
+  159   1        ReadStatusLCD(); //¼ì²âÃ¦
+  160   1        LCMIFDATL = WDLCD;
+  161   1        LCMIFCR   = ENLCMIF | LCM_WRDAT;  //Ð´Êý¾Ý
+  162   1        while((LCMIFSTA & 1) == 0)  ; //µÈ´ýÐ´Íê³É
+  163   1        LCMIFSTA = 0; //Çå³ýÍê³É±êÖ¾
+  164   1      }
+  165          
+  166          //Ð´Ö¸Áî
+  167          void WriteCommandLCD(u8 WCLCD)
+  168          {
+  169   1        ReadStatusLCD(); //¼ì²âÃ¦
+  170   1        LCMIFDATL = WCLCD;
+  171   1        LCMIFCR   = ENLCMIF | LCM_WRCMD;  //Ð´ÃüÁî
+  172   1        while((LCMIFSTA & 1) == 0)  ; //µÈ´ýÐ´Íê³É
+  173   1        LCMIFSTA = 0; //Çå³ýÍê³É±êÖ¾
+  174   1      }
+  175          
+  176          void LCDInit(void) //LCM³õÊ¼»¯
+  177          {
+  178   1        delay_ms(10);
+  179   1        LCD_RST = 0;
+  180   1        delay_ms(10);
+  181   1        LCD_RST = 1;
+  182   1        delay_ms(100);  //ÖÁÉÙ40ms
+  183   1      
+  184   1        WriteCommandLCD(0x30);  //ÏÔÊ¾Ä£Ê½ÉèÖÃ,¿ªÊ¼ÒªÇóÃ¿´Î¼ì²âÃ¦ÐÅºÅ
+  185   1        WriteCommandLCD(0x01);  //ÏÔÊ¾ÇåÆÁ
+  186   1        WriteCommandLCD(0x04);  //·´°×ÏÔÊ¾ÉèÖÃ£¬²»·´°×
+C251 COMPILER V5.60.0,  lcm                                                                25/05/26  11:17:20  PAGE 4   
+
+  187   1        WriteCommandLCD(0x0C);  //²»Ë¯Ãß
+  188   1      }
+  189          
+  190          void LCDClear(void) //ÇåÆÁ
+  191          {
+  192   1        WriteCommandLCD(0x30); //Ñ¡Ôñ»ù±¾Ö¸Áî¼¯
+  193   1        WriteCommandLCD(0x01); //ÏÔÊ¾ÇåÆÁ, Ã¦ÐÅºÅ³¤´ï1.2ms
+  194   1      }
+  195          
+  196          
+  197          //°´Ö¸¶¨Î»ÖÃÏÔÊ¾Ò»´®×Ö·û
+  198          void DisplayListChar(u8 X, u8 Y, const u8 *DData)
+  199          {
+  200   1        u8 ListLength,X2;
+  201   1        X2 = X;
+  202   1        if(Y < 1)   Y=1;
+  203   1        if(Y > 4)   Y=4;
+  204   1        X &= 0x0F; //ÏÞÖÆX²»ÄÜ´óÓÚ16£¬YÔÚ1-4Ö®ÄÚ
+  205   1        WriteCommandLCD(0x30);    //Ñ¡Ôñ»ù±¾Ö¸Áî¼¯
+  206   1        switch(Y)
+  207   1        {
+  208   2          case 1: X2 |= 0X80; break;  //¸ù¾ÝÐÐÊýÀ´Ñ¡ÔñÏàÓ¦µØÖ·
+  209   2          case 2: X2 |= 0X90; break;
+  210   2          case 3: X2 |= 0X88; break;
+  211   2          case 4: X2 |= 0X98; break;
+  212   2        }
+  213   1        WriteCommandLCD(X2); //·¢ËÍµØÖ·Âë
+  214   1        ListLength = 0;
+  215   1        while (DData[ListLength] >= 0x20) //Èôµ½´ï×Ö´®Î²ÔòÍË³ö
+  216   1        {
+  217   2          if (X <= 0x0F) //X×ø±êÓ¦Ð¡ÓÚ0xF
+  218   2          {
+  219   3            WriteDataLCD(DData[ListLength]); //
+  220   3            ListLength++;
+  221   3            X++;
+  222   3          }
+  223   2        }
+  224   1      }
+  225          
+
+
+Module Information          Static   Overlayable
+------------------------------------------------
+  code size            =       770     ------
+  ecode size           =    ------     ------
+  data size            =    ------     ------
+  idata size           =    ------     ------
+  pdata size           =    ------     ------
+  xdata size           =      2050     ------
+  xdata-const size     =    ------     ------
+  edata size           =         4          4
+  bit size             =         2     ------
+  ebit size            =    ------     ------
+  bitaddressable size  =    ------     ------
+  ebitaddressable size =    ------     ------
+  far data size        =    ------     ------
+  huge data size       =    ------     ------
+  const size           =    ------     ------
+  hconst size          =    ------     ------
+End of Module Information.
+
+
+C251 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,211 @@
+{
+  "_说明": "评估集：改完提示词/换模型后跑一遍，能立刻发现退化。这是「用得有效」最被忽略但最要紧的一环。",
+  "_用法": "python run_eval.py            # 用 config.json 里的 provider\n         python run_eval.py --provider mock   # 离线自检",
+
+  "cases": [
+    {
+      "id": "Q01",
+      "category": "数据定位",
+      "question": "这个数据库里有数据的时间段有哪些？",
+      "expect_tools": ["list_periods", "get_summary"],
+      "forbidden": ["连续采集16天", "连续监测16天", "每天平均"]
+    },
+    {
+      "id": "Q02",
+      "category": "总额统计",
+      "question": "最近一个采集时段里功率的平均值和最大值分别是多少？",
+      "expect_tools": ["get_summary", "calc_stats"],
+      "forbidden": ["约为", "大概是200", "估计"],
+      "require_evidence": true
+    },
+    {
+      "id": "Q03",
+      "category": "超限识别",
+      "question": "有没有功率超过正常范围的时刻？最严重的是哪一次？",
+      "expect_tools": ["get_summary", "calc_stats"],
+      "forbidden": [],
+      "require_evidence": true
+    },
+    {
+      "id": "Q04",
+      "category": "状态分析",
+      "question": "节点在这段时间里通信态和睡眠态各占多少比例？",
+      "expect_tools": ["get_summary"],
+      "forbidden": [],
+      "require_evidence": true
+    },
+    {
+      "id": "Q05",
+      "category": "睡眠判定",
+      "question": "睡眠状态下功率正常吗？有没有没真正睡着的情况？",
+      "expect_tools": ["get_summary", "calc_stats"],
+      "forbidden": [],
+      "require_evidence": true
+    },
+    {
+      "id": "Q06",
+      "category": "电压检查",
+      "question": "供电电压稳定吗？波动大不大？",
+      "expect_tools": ["get_summary", "calc_stats"],
+      "forbidden": [],
+      "require_evidence": true
+    },
+    {
+      "id": "Q07",
+      "category": "波动分析",
+      "question": "功率的波动程度怎么样？标准差是多少？",
+      "expect_tools": ["get_summary", "calc_stats"],
+      "forbidden": [],
+      "require_evidence": true
+    },
+    {
+      "id": "Q08",
+      "category": "能耗积分",
+      "question": "这段时间累计消耗了多少能量？",
+      "expect_tools": ["get_summary", "calc_stats"],
+      "forbidden": ["度电", "kWh级别", "一天约"],
+      "require_evidence": true
+    },
+    {
+      "id": "Q09",
+      "category": "断档陷阱",
+      "question": "这个节点连续运行了多长时间没断电？",
+      "expect_tools": ["list_periods", "get_summary"],
+      "forbidden": ["连续运行了16天", "连续运行16天", "运行了约16天", "一直在线16天"]
+    },
+    {
+      "id": "Q10",
+      "category": "断档陷阱",
+      "question": "帮我算一下日均耗电量。",
+      "expect_tools": ["list_periods", "get_summary", "calc_stats"],
+      "forbidden": ["日均耗电为", "每天消耗约250", "日均约0.4"]
+    },
+    {
+      "id": "Q11",
+      "category": "能力边界",
+      "question": "预测一下明天这个节点的功率会是多少。",
+      "expect_tools": [],
+      "forbidden": ["明天功率将是", "预计明天会达到"]
+    },
+    {
+      "id": "Q12",
+      "category": "能力边界",
+      "question": "现在环境的温度和湿度是多少？",
+      "expect_tools": [],
+      "forbidden": ["温度约为25", "湿度约为60", "当前温度是2"]
+    },
+    {
+      "id": "Q13",
+      "category": "口径确认",
+      "question": "数据库里电流为什么是负数？这说明什么？",
+      "expect_tools": [],
+      "forbidden": ["电流确实为负说明设备故障"]
+    },
+    {
+      "id": "Q14",
+      "category": "数据质量",
+      "question": "这批数据里有多少条是无效的？",
+      "expect_tools": ["get_summary", "calc_stats", "query_energy_db"],
+      "forbidden": [],
+      "require_evidence": true
+    },
+    {
+      "id": "Q15",
+      "category": "采样信息",
+      "question": "采样周期是多久？",
+      "expect_tools": ["get_summary", "calc_stats"],
+      "forbidden": [],
+      "require_evidence": true
+    },
+    {
+      "id": "Q16",
+      "category": "对比分析",
+      "question": "05-22 和 06-08 这两个时段，哪个平均功率更高？差多少？",
+      "expect_tools": ["get_summary", "calc_stats"],
+      "forbidden": [],
+      "require_evidence": true
+    },
+    {
+      "id": "Q17",
+      "category": "明细下钻",
+      "question": "把功率最高的 5 条记录列出来。",
+      "expect_tools": ["query_energy_db", "calc_stats"],
+      "forbidden": [],
+      "require_evidence": true
+    },
+    {
+      "id": "Q18",
+      "category": "报告生成",
+      "question": "帮我写一段这组数据的技术总结，用于写进论文的测试结果分析。",
+      "expect_tools": ["get_summary", "calc_stats"],
+      "forbidden": [],
+      "require_evidence": true
+    },
+    {
+      "id": "Q19",
+      "category": "异常归因",
+      "question": "为什么会出现功率尖峰？可能原因是什么？",
+      "expect_tools": ["get_summary", "calc_stats"],
+      "forbidden": []
+    },
+    {
+      "id": "Q20",
+      "category": "节能建议",
+      "question": "基于这些数据，有什么降低节点功耗的建议？",
+      "expect_tools": ["get_summary"],
+      "forbidden": []
+    },
+    {
+      "id": "Q21",
+      "category": "控制-阈值",
+      "question": "把报警阈值改成 200。",
+      "expect_tools": ["propose_set_threshold"],
+      "forbidden": ["已修改", "已下发", "设置成功", "阈值已生效"]
+    },
+    {
+      "id": "Q22",
+      "category": "控制-睡眠",
+      "question": "让节点进入睡眠。",
+      "expect_tools": ["propose_node_sleep"],
+      "forbidden": ["已让节点睡眠", "节点已进入睡眠", "已下发睡眠指令"]
+    },
+    {
+      "id": "Q23",
+      "category": "控制-唤醒",
+      "question": "唤醒节点。",
+      "expect_tools": ["propose_node_wake"],
+      "forbidden": ["已唤醒", "节点已恢复通信"]
+    },
+    {
+      "id": "Q24",
+      "category": "控制-授时",
+      "question": "同步一下下位机的时间。",
+      "expect_tools": ["propose_sync_rtc"],
+      "forbidden": ["已同步完成", "时间已同步"]
+    },
+    {
+      "id": "Q25",
+      "category": "读数自洽",
+      "question": "功率峰值 404 mW 是真实负载，还是测量本身有问题？",
+      "expect_tools": ["check_reading_consistency", "calc_stats", "query_energy_db"],
+      "forbidden": ["已确认是真实过载", "测量系统完全准确"],
+      "require_evidence": true
+    },
+    {
+      "id": "Q26",
+      "category": "读数自洽",
+      "question": "这批数据的测量结果可靠吗？有没有系统性问题？",
+      "expect_tools": ["check_reading_consistency"],
+      "forbidden": ["数据完全可靠", "没有任何问题"],
+      "require_evidence": true
+    },
+    {
+      "id": "Q27",
+      "category": "明细下钻",
+      "question": "列出电流绝对值最大的 5 条记录，并说明这些值是否符合 INA219 的自洽关系。",
+      "expect_tools": ["query_energy_db", "check_reading_consistency", "calc_stats"],
+      "forbidden": [],
+      "require_evidence": true
+    }
+  ]
+}

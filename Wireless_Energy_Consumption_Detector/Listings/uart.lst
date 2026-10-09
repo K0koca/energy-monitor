@@ -1,0 +1,483 @@
+C251 COMPILER V5.60.0,  uart                                                               25/05/26  11:17:20  PAGE 1   
+
+
+C251 COMPILER V5.60.0, COMPILATION OF MODULE uart
+OBJECT MODULE PLACED IN .\Objects\uart.obj
+COMPILER INVOKED BY: E:\Eng_Software\Keil_v5\C251\BIN\C251.EXE Sources\uart.c XSMALL BROWSE INCDIR(D:\1DKN\big4\Wireless
+                    -_Energy_Consumption_Detector\Sources\inc) DEBUG PRINT(.\Listings\uart.lst) TABS(2) OBJECT(.\Objects\uart.obj) 
+
+stmt  level    source
+
+    1          //<<AICUBE_USER_HEADER_REMARK_BEGIN>>
+    2          ////////////////////////////////////////
+    3          // 在此添加用户文件头说明信息  
+    4          // 文件名称: uart.c
+    5          // 文件描述: 
+    6          // 文件版本: V1.0
+    7          // 修改记录:
+    8          //   1. (2026-05-03) 创建文件
+    9          ////////////////////////////////////////
+   10          //<<AICUBE_USER_HEADER_REMARK_END>>
+   11          
+   12          
+   13          #include "config.h"
+   14          
+   15          
+   16          //<<AICUBE_USER_INCLUDE_BEGIN>>
+   17          // 在此添加用户头文件包含  
+   18          //<<AICUBE_USER_INCLUDE_END>>
+   19          
+   20          
+   21          //<<AICUBE_USER_GLOBAL_DEFINE_BEGIN>>
+   22          // 在此添加用户全局变量定义、用户宏定义以及函数声明  
+   23          //<<AICUBE_USER_GLOBAL_DEFINE_END>>
+   24          
+   25          
+   26          BOOL fPrintfBusy;
+   27          BOOL fUART1ReadyRead;
+   28          uint8_t u8UART1RxCount;
+   29          uint8_t xdata pu8UART1RxBuffer[UART1_RXSIZE];
+   30          BOOL fUART2SendBusy;
+   31          BOOL fUART2ReadyRead;
+   32          uint8_t u8UART2RxCount;
+   33          uint8_t xdata pu8UART2RxBuffer[UART2_RXSIZE];
+   34          BOOL fUART4SendBusy;
+   35          BOOL fUART4ReadyRead;
+   36          uint8_t u8UART4RxCount;
+   37          uint8_t xdata pu8UART4RxBuffer[UART4_RXSIZE];
+   38          
+   39          ////////////////////////////////////////
+   40          // 串口1初始化函数
+   41          // 入口参数: 无
+   42          // 函数返回: 无
+   43          ////////////////////////////////////////
+   44          void UART1_Init(void)
+   45          {
+   46   1      #ifdef BAUDRATE
+               #undef BAUDRATE
+               #endif
+   49   1      #define BAUDRATE                (115200UL)
+   50   1      #define T2_RELOAD               (65536 - (SYSCLK / BAUDRATE + 2) / 4)
+   51   1      
+   52   1          UART1_SwitchP1617();                //设置串口数据端口: RxD (P1.6), TxD (P1.7)
+   53   1      
+   54   1          UART1_Timer2BRT();                  //选择定时器2作为串口1波特率发生器
+   55   1          TIMER2_TimerMode();                 //设置定时器2为定时模式
+   56   1          TIMER2_1TMode();                    //设置定时器2为1T模式
+   57   1          TIMER2_SetPrescale(0);              //设置定时器2的8位预分频
+   58   1          TIMER2_SetReload16(T2_RELOAD);      //设置定时器2的16位重载值
+C251 COMPILER V5.60.0,  uart                                                               25/05/26  11:17:20  PAGE 2   
+
+   59   1          TIMER2_Run();                       //定时器2开始运行
+   60   1      
+   61   1          UART1_EnableRx();                   //使能串口1接收数据
+   62   1          UART1_Mode1();                      //设置串口1为模式1 (8位数据可变波特率)
+   63   1          UART1_SetIntPriority(2);            //设置中断为较高优先级
+   64   1          UART1_EnableInt();                  //使能串口1中断
+   65   1      
+   66   1          fPrintfBusy = 0;                    //清除发送数据忙标志
+   67   1          fUART1ReadyRead = 0;                //清除接收数据完成标志
+   68   1          u8UART1RxCount = 0;                 //初始化接收字节数量
+   69   1      
+   70   1          //<<AICUBE_USER_UART1_INITIAL_BEGIN>>
+   71   1          // 在此添加用户初始化代码  
+   72   1          //<<AICUBE_USER_UART1_INITIAL_END>>
+   73   1      }
+   74          
+   75          
+   76          ////////////////////////////////////////
+   77          // 串口1发送数据函数
+   78          // 入口参数: dat (待发送的字节数据)
+   79          // 函数返回: 无
+   80          ////////////////////////////////////////
+   81          void UART1_SendByte(uint8_t dat)
+   82          {
+   83   1          putchar((char)dat);
+   84   1      }
+   85          
+   86          ////////////////////////////////////////
+   87          // 串口1发送多字节数据函数
+   88          // 入口参数: dat  (发送数据缓冲区)
+   89          //           size (数据大小)
+   90          // 函数返回: 无
+   91          ////////////////////////////////////////
+   92          void UART1_SendBuffer(uint8_t *dat, uint8_t size)
+   93          {
+   94   1          while (size--)                      //判断数据是否结束
+   95   1              UART1_SendByte(*dat++);         //发送当前字节
+   96   1      }
+   97          
+   98          ////////////////////////////////////////
+   99          // 串口1发送字符串函数
+  100          // 入口参数: str  (字符串首地址)
+  101          // 函数返回: 无
+  102          ////////////////////////////////////////
+  103          void UART1_SendString(char *str)
+  104          {
+  105   1          printf(str);                        //直接使用printf函数打印字符串
+  106   1      }
+  107          ////////////////////////////////////////
+  108          // 串口2初始化函数
+  109          // 入口参数: 无
+  110          // 函数返回: 无
+  111          ////////////////////////////////////////
+  112          void UART2_Init(void)
+  113          {
+  114   1      #ifdef BAUDRATE
+  115   1      #undef BAUDRATE
+  116   1      #endif
+  117   1      #define BAUDRATE                (115200UL)
+  118   1      #define T2_RELOAD               (65536 - (SYSCLK / BAUDRATE + 2) / 4)
+  119   1      
+  120   1          UART2_SwitchP1213();                //设置串口数据端口: RxD2 (P1.2), TxD2 (P1.3)
+  121   1      
+  122   1          UART2_Timer2BRT();                  //串口2固定选择定时器2作为波特率发生器（W1[S2CFG.0]必须设置为1）
+  123   1          TIMER2_TimerMode();                 //设置定时器2为定时模式
+  124   1          TIMER2_1TMode();                    //设置定时器2为1T模式
+C251 COMPILER V5.60.0,  uart                                                               25/05/26  11:17:20  PAGE 3   
+
+  125   1          TIMER2_SetPrescale(0);              //设置定时器2的8位预分频
+  126   1          TIMER2_SetReload16(T2_RELOAD);      //设置定时器2的16位重载值
+  127   1          TIMER2_Run();                       //定时器2开始运行
+  128   1      
+  129   1          UART2_EnableRx();                   //使能串口2接收数据
+  130   1          UART2_Mode1();                      //设置串口2为模式1 (8位数据可变波特率)
+  131   1          UART2_SetIntPriority(0);            //设置中断为最低优先级
+  132   1          UART2_EnableInt();                  //使能串口2中断
+  133   1      
+  134   1          fUART2SendBusy = 0;                 //清除发送数据忙标志
+  135   1          fUART2ReadyRead = 0;                //清除接收数据完成标志
+  136   1          u8UART2RxCount = 0;                 //初始化接收字节数量
+  137   1      
+  138   1          //<<AICUBE_USER_UART2_INITIAL_BEGIN>>
+  139   1          // 在此添加用户初始化代码  
+  140   1          //<<AICUBE_USER_UART2_INITIAL_END>>
+  141   1      }
+  142          
+  143          ////////////////////////////////////////
+  144          // 串口2发送数据函数
+  145          // 入口参数: dat (待发送的字节数据)
+  146          // 函数返回: 无
+  147          ////////////////////////////////////////
+  148          void UART2_SendByte(uint8_t dat)
+  149          {
+  150   1          while (fUART2SendBusy);             //等待之前的数据发送完成
+  151   1          UART2_SendData(dat);                //发送当前字节
+  152   1          fUART2SendBusy = 1;                 //设置发送忙标志
+  153   1      }
+  154          
+  155          ////////////////////////////////////////
+  156          // 串口2发送多字节数据函数
+  157          // 入口参数: dat  (发送数据缓冲区)
+  158          //           size (数据大小)
+  159          // 函数返回: 无
+  160          ////////////////////////////////////////
+  161          void UART2_SendBuffer(uint8_t *dat, uint8_t size)
+  162          {
+  163   1          while (size--)                      //判断数据是否结束
+  164   1              UART2_SendByte(*dat++);         //发送当前字节
+  165   1      }
+  166          
+  167          ////////////////////////////////////////
+  168          // 串口2发送字符串函数
+  169          // 入口参数: str  (字符串首地址)
+  170          // 函数返回: 无
+  171          ////////////////////////////////////////
+  172          void UART2_SendString(char *str)
+  173          {
+  174   1          char c;
+  175   1      
+  176   1          while (c = *str++)                  //判断字符串是否结束
+  177   1              UART2_SendByte(c);              //发送当前字节
+  178   1      }
+  179          
+  180          
+  181          ////////////////////////////////////////
+  182          // 串口4初始化函数
+  183          // 入口参数: 无
+  184          // 函数返回: 无
+  185          ////////////////////////////////////////
+  186          void UART4_Init(void)
+  187          {
+  188   1      #ifdef BAUDRATE
+  189   1      #undef BAUDRATE
+  190   1      #endif
+C251 COMPILER V5.60.0,  uart                                                               25/05/26  11:17:20  PAGE 4   
+
+  191   1      #define BAUDRATE                (115200UL)
+  192   1      #define T2_RELOAD               (65536 - (SYSCLK / BAUDRATE + 2) / 4)
+  193   1      
+  194   1          UART4_SwitchP5253();                //设置串口数据端口: RxD4 (P5.2), TxD4 (P5.3)
+  195   1      
+  196   1          UART4_Timer2BRT();                  //选择定时器2作为串口4波特率发生器
+  197   1          TIMER2_TimerMode();                 //设置定时器2为定时模式
+  198   1          TIMER2_1TMode();                    //设置定时器2为1T模式
+  199   1          TIMER2_SetPrescale(0);              //设置定时器2的8位预分频
+  200   1          TIMER2_SetReload16(T2_RELOAD);      //设置定时器2的16位重载值
+  201   1          TIMER2_Run();                       //定时器2开始运行
+  202   1      
+  203   1          UART4_EnableRx();                   //使能串口4接收数据
+  204   1          UART4_Mode0();                      //设置串口4为模式0 (8位数据可变波特率)
+  205   1          UART4_SetIntPriority(0);            //设置中断为最低优先级
+  206   1          UART4_EnableInt();                  //使能串口4中断
+  207   1      
+  208   1          fUART4SendBusy = 0;                 //清除发送数据忙标志
+  209   1          fUART4ReadyRead = 0;                //清除接收数据完成标志
+  210   1          u8UART4RxCount = 0;                 //初始化接收字节数量
+  211   1      
+  212   1          //<<AICUBE_USER_UART4_INITIAL_BEGIN>>
+  213   1          // 在此添加用户初始化代码  
+  214   1          //<<AICUBE_USER_UART4_INITIAL_END>>
+  215   1      }
+  216          
+  217          ////////////////////////////////////////
+  218          // 串口4发送数据函数
+  219          // 入口参数: dat (待发送的字节数据)
+  220          // 函数返回: 无
+  221          ////////////////////////////////////////
+  222          void UART4_SendByte(uint8_t dat)
+  223          {
+  224   1          while (fUART4SendBusy);             //等待之前的数据发送完成
+  225   1          UART4_SendData(dat);                //发送当前字节
+  226   1          fUART4SendBusy = 1;                 //设置发送忙标志
+  227   1      }
+  228          
+  229          ////////////////////////////////////////
+  230          // 串口4发送多字节数据函数
+  231          // 入口参数: dat  (发送数据缓冲区)
+  232          //           size (数据大小)
+  233          // 函数返回: 无
+  234          ////////////////////////////////////////
+  235          void UART4_SendBuffer(uint8_t *dat, uint8_t size)
+  236          {
+  237   1          while (size--)                      //判断数据是否结束
+  238   1              UART4_SendByte(*dat++);         //发送当前字节
+  239   1      }
+  240          
+  241          ////////////////////////////////////////
+  242          // 串口4发送字符串函数
+  243          // 入口参数: str  (字符串首地址)
+  244          // 函数返回: 无
+  245          ////////////////////////////////////////
+  246          void UART4_SendString(char *str)
+  247          {
+  248   1          char c;
+  249   1      
+  250   1          while (c = *str++)                  //判断字符串是否结束
+  251   1              UART4_SendByte(c);              //发送当前字节
+  252   1      }
+  253          
+  254          
+  255          ////////////////////////////////////////
+  256          // 串口1中断服务程序
+C251 COMPILER V5.60.0,  uart                                                               25/05/26  11:17:20  PAGE 5   
+
+  257          // 入口参数: 无
+  258          // 函数返回: 无
+  259          ////////////////////////////////////////
+  260          void UART1_ISR(void) interrupt UART1_VECTOR
+  261          {
+  262   1        uint8_t rec_data;
+  263   1          //<<AICUBE_USER_UART1_ISR_CODE1_BEGIN>>
+  264   1          // 在此添加中断函数用户代码  
+  265   1          if (UART1_CheckTxFlag())            //判断串口发送中断
+  266   1          {
+  267   2              UART1_ClearTxFlag();            //清除串口发送中断标志
+  268   2      
+  269   2              fPrintfBusy = 0;                //清除printf发送忙标志
+  270   2          }
+  271   1      
+  272   1          if (UART1_CheckRxFlag())            //判断串口接收中断
+  273   1          {
+  274   2              UART1_ClearRxFlag();            //清除串口接收中断标志
+  275   2          
+  276   2          rec_data = UART1_ReadData();
+  277   2          
+  278   2          UART1_ReceiveHandler(rec_data);
+  279   2          
+  280   2              pu8UART1RxBuffer[u8UART1RxCount++] = UART1_ReadData(); //保存接收的数据到接收缓冲区
+  281   2              if (u8UART1RxCount >= UART1_RXSIZE)
+  282   2                  u8UART1RxCount = 0;         //防止数组边界溢出
+  283   2      
+  284   2              fUART1ReadyRead = 1;            //设置接收数据完成标志
+  285   2          }
+  286   1          //<<AICUBE_USER_UART1_ISR_CODE1_END>>
+  287   1      }
+  288          
+  289          ////////////////////////////////////////
+  290          // 串口2中断服务程序
+  291          // 入口参数: 无
+  292          // 函数返回: 无
+  293          ////////////////////////////////////////
+  294          void UART2_ISR(void) interrupt UART2_VECTOR
+  295          {
+  296   1          //<<AICUBE_USER_UART2_ISR_CODE1_BEGIN>>
+  297   1          // 在此添加中断函数用户代码  
+  298   1          if (UART2_CheckTxFlag())            //判断串口发送中断
+  299   1          {
+  300   2              UART2_ClearTxFlag();            //清除串口发送中断标志
+  301   2      
+  302   2              fUART2SendBusy = 0;             //清除发送忙标志
+  303   2          }
+  304   1      
+  305   1          if (UART2_CheckRxFlag())            //判断串口接收中断
+  306   1          {
+  307   2              UART2_ClearRxFlag();            //清除串口接收中断标志
+  308   2      
+  309   2              pu8UART2RxBuffer[u8UART2RxCount++] = UART2_ReadData(); //保存接收的数据到接收缓冲区
+  310   2              if (u8UART2RxCount >= UART2_RXSIZE)
+  311   2                  u8UART2RxCount = 0;         //防止数组边界溢出
+  312   2      
+  313   2              fUART2ReadyRead = 1;            //设置接收数据完成标志
+  314   2          }
+  315   1          //<<AICUBE_USER_UART2_ISR_CODE1_END>>
+  316   1      }
+  317          
+  318          ////////////////////////////////////////
+  319          // 串口4中断服务程序
+  320          // 入口参数: 无
+  321          // 函数返回: 无
+  322          ////////////////////////////////////////
+C251 COMPILER V5.60.0,  uart                                                               25/05/26  11:17:20  PAGE 6   
+
+  323          void UART4_ISR(void) interrupt UART4_VECTOR
+  324          {
+  325   1          //<<AICUBE_USER_UART4_ISR_CODE1_BEGIN>>
+  326   1          // 在此添加中断函数用户代码  
+  327   1          if (UART4_CheckTxFlag())            //判断串口发送中断
+  328   1          {
+  329   2              UART4_ClearTxFlag();            //清除串口发送中断标志
+  330   2      
+  331   2              fUART4SendBusy = 0;             //清除发送忙标志
+  332   2              fPrintfBusy = 0;                //清除printf发送忙标志
+  333   2          }
+  334   1      
+  335   1          if (UART4_CheckRxFlag())            //判断串口接收中断
+  336   1          {
+  337   2              UART4_ClearRxFlag();            //清除串口接收中断标志
+  338   2      
+  339   2              pu8UART4RxBuffer[u8UART4RxCount++] = UART4_ReadData(); //保存接收的数据到接收缓冲区
+  340   2              if (u8UART4RxCount >= UART4_RXSIZE)
+  341   2                  u8UART4RxCount = 0;         //防止数组边界溢出
+  342   2      
+  343   2              fUART4ReadyRead = 1;            //设置接收数据完成标志
+  344   2          }
+  345   1          //<<AICUBE_USER_UART4_ISR_CODE1_END>>
+  346   1      }
+  347          
+  348          
+  349          //<<AICUBE_USER_FUNCTION_IMPLEMENT_BEGIN>>
+  350          ////////////////////////////////////////
+  351          // 重写printf字符发送重定向函数
+  352          // 入口参数: dat (printf函数待打印的字符)
+  353          // 函数返回: 需要返回入口参数的数据
+  354          ////////////////////////////////////////
+  355          
+  356          char putchar (char dat)                 //将串口1和printf函数绑定
+  357          {
+  358   1          while (fPrintfBusy);                //等待之前的数据发送完成
+  359   1          UART1_SendData(dat);                //发送当前字节
+  360   1          fPrintfBusy = 1;                    //设置发送忙标志
+  361   1      
+  362   1          return dat;
+  363   1      }
+  364          
+  365          ////////////////////////////////////////
+  366          // 重写printf字符发送重定向函数
+  367          // 入口参数: dat (printf函数待打印的字符)
+  368          // 函数返回: 需要返回入口参数的数据
+  369          ////////////////////////////////////////
+  370          /*
+  371          char putchar (char dat)                 //将串口4和printf函数绑定
+  372          {
+  373              while (fPrintfBusy);                //等待之前的数据发送完成
+  374              UART4_SendData(dat);                //发送当前字节
+  375              fPrintfBusy = 1;                    //设置发送忙标志
+  376          
+  377              return dat;
+  378          }
+  379          */
+  380          //<<AICUBE_USER_FUNCTION_IMPLEMENT_END>>
+  381          
+  382          
+  383          ////////////////////////////////////////
+  384          // 计算/校验MODBUS数据包的CRC16函数
+  385          // 基于(x^16 + x^15 + x^2 + 1)的MODBUS-CRC16多项式
+  386          // 入口参数: dat (待计算/校验的字节)
+  387          // 函数返回: 如果数据包中未包含CRC数据，则返回值为整包数据的CRC结果
+  388          //           如果数据包中已保护CRC数据，则返回值为0表示CRC正确，否则CRC错误
+C251 COMPILER V5.60.0,  uart                                                               25/05/26  11:17:20  PAGE 7   
+
+  389          ////////////////////////////////////////
+  390          uint16_t MODBUS_CRC16_Check(uint8_t *dat, int size)
+  391          {
+  392   1          static uint16_t code CRC_TAB[256] = //使用查表法计算CRC
+  393   1          {
+  394   1              0x0000, 0xc0c1, 0xc181, 0x0140, 0xc301, 0x03c0, 0x0280, 0xc241,
+  395   1              0xc601, 0x06c0, 0x0780, 0xc741, 0x0500, 0xc5c1, 0xc481, 0x0440,
+  396   1              0xcc01, 0x0cc0, 0x0d80, 0xcd41, 0x0f00, 0xcfc1, 0xce81, 0x0e40,
+  397   1              0x0a00, 0xcac1, 0xcb81, 0x0b40, 0xc901, 0x09c0, 0x0880, 0xc841,
+  398   1              0xd801, 0x18c0, 0x1980, 0xd941, 0x1b00, 0xdbc1, 0xda81, 0x1a40,
+  399   1              0x1e00, 0xdec1, 0xdf81, 0x1f40, 0xdd01, 0x1dc0, 0x1c80, 0xdc41,
+  400   1              0x1400, 0xd4c1, 0xd581, 0x1540, 0xd701, 0x17c0, 0x1680, 0xd641,
+  401   1              0xd201, 0x12c0, 0x1380, 0xd341, 0x1100, 0xd1c1, 0xd081, 0x1040,
+  402   1              0xf001, 0x30c0, 0x3180, 0xf141, 0x3300, 0xf3c1, 0xf281, 0x3240,
+  403   1              0x3600, 0xf6c1, 0xf781, 0x3740, 0xf501, 0x35c0, 0x3480, 0xf441,
+  404   1              0x3c00, 0xfcc1, 0xfd81, 0x3d40, 0xff01, 0x3fc0, 0x3e80, 0xfe41,
+  405   1              0xfa01, 0x3ac0, 0x3b80, 0xfb41, 0x3900, 0xf9c1, 0xf881, 0x3840,
+  406   1              0x2800, 0xe8c1, 0xe981, 0x2940, 0xeb01, 0x2bc0, 0x2a80, 0xea41,
+  407   1              0xee01, 0x2ec0, 0x2f80, 0xef41, 0x2d00, 0xedc1, 0xec81, 0x2c40,
+  408   1              0xe401, 0x24c0, 0x2580, 0xe541, 0x2700, 0xe7c1, 0xe681, 0x2640,
+  409   1              0x2200, 0xe2c1, 0xe381, 0x2340, 0xe101, 0x21c0, 0x2080, 0xe041,
+  410   1              0xa001, 0x60c0, 0x6180, 0xa141, 0x6300, 0xa3c1, 0xa281, 0x6240,
+  411   1              0x6600, 0xa6c1, 0xa781, 0x6740, 0xa501, 0x65c0, 0x6480, 0xa441,
+  412   1              0x6c00, 0xacc1, 0xad81, 0x6d40, 0xaf01, 0x6fc0, 0x6e80, 0xae41,
+  413   1              0xaa01, 0x6ac0, 0x6b80, 0xab41, 0x6900, 0xa9c1, 0xa881, 0x6840,
+  414   1              0x7800, 0xb8c1, 0xb981, 0x7940, 0xbb01, 0x7bc0, 0x7a80, 0xba41,
+  415   1              0xbe01, 0x7ec0, 0x7f80, 0xbf41, 0x7d00, 0xbdc1, 0xbc81, 0x7c40,
+  416   1              0xb401, 0x74c0, 0x7580, 0xb541, 0x7700, 0xb7c1, 0xb681, 0x7640,
+  417   1              0x7200, 0xb2c1, 0xb381, 0x7340, 0xb101, 0x71c0, 0x7080, 0xb041,
+  418   1              0x5000, 0x90c1, 0x9181, 0x5140, 0x9301, 0x53c0, 0x5280, 0x9241,
+  419   1              0x9601, 0x56c0, 0x5780, 0x9741, 0x5500, 0x95c1, 0x9481, 0x5440,
+  420   1              0x9c01, 0x5cc0, 0x5d80, 0x9d41, 0x5f00, 0x9fc1, 0x9e81, 0x5e40,
+  421   1              0x5a00, 0x9ac1, 0x9b81, 0x5b40, 0x9901, 0x59c0, 0x5880, 0x9841,
+  422   1              0x8801, 0x48c0, 0x4980, 0x8941, 0x4b00, 0x8bc1, 0x8a81, 0x4a40,
+  423   1              0x4e00, 0x8ec1, 0x8f81, 0x4f40, 0x8d01, 0x4dc0, 0x4c80, 0x8c41,
+  424   1              0x4400, 0x84c1, 0x8581, 0x4540, 0x8701, 0x47c0, 0x4680, 0x8641,
+  425   1              0x8201, 0x42c0, 0x4380, 0x8341, 0x4100, 0x81c1, 0x8081, 0x4040,
+  426   1          };
+  427   1          uint16_t crc;                       //定义变量保存CRC结果
+  428   1          int i;
+  429   1      
+  430   1          crc = 0xffff;                       //CRC结果初始化
+  431   1          for (i = 0; i < size; i++)
+  432   1              crc = (crc >> 8) ^ CRC_TAB[(crc & 0xff) ^ dat[i]]; //计算CRC
+  433   1      
+  434   1          return crc;                         //返回CRC结果
+  435   1      }
+
+
+Module Information          Static   Overlayable
+------------------------------------------------
+  code size            =      1239     ------
+  ecode size           =    ------     ------
+  data size            =    ------     ------
+  idata size           =    ------     ------
+  pdata size           =    ------     ------
+  xdata size           =       384     ------
+  xdata-const size     =    ------     ------
+  edata size           =         3          5
+  bit size             =         6     ------
+  ebit size            =    ------     ------
+  bitaddressable size  =    ------     ------
+  ebitaddressable size =    ------     ------
+  far data size        =    ------     ------
+  huge data size       =    ------     ------
+  const size           =    ------     ------
+  hconst size          =    ------     ------
+C251 COMPILER V5.60.0,  uart                                                               25/05/26  11:17:20  PAGE 8   
+
+End of Module Information.
+
+
+C251 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

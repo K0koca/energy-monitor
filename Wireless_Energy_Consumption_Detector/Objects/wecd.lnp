@@ -1,0 +1,20 @@
+".\Objects\main.obj",
+".\Objects\port.obj",
+".\Objects\clock.obj",
+".\Objects\wdt.obj",
+".\Objects\iap.obj",
+".\Objects\timer.obj",
+".\Objects\uart.obj",
+".\Objects\i2c.obj",
+".\Objects\rtc.obj",
+".\Objects\lcm.obj",
+".\Objects\ina219.obj",
+".\Objects\dht11.obj",
+".\Objects\esp8266.obj",
+".\Objects\uart_rtc.obj",
+".\Objects\Soft_Convert.obj" 
+TO ".\Objects\wecd" 
+PRINT(".\Listings\wecd.map") CASE DISABLEWARNING (16) 
+REMOVEUNUSED, NOOVERLAY 
+CLASSES (EDATA (0x0-0x7FF), 
+HDATA (0x0-0x7FF)) 

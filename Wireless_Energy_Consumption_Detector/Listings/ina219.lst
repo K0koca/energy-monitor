@@ -1,0 +1,159 @@
+C251 COMPILER V5.60.0,  ina219                                                             25/05/26  11:17:20  PAGE 1   
+
+
+C251 COMPILER V5.60.0, COMPILATION OF MODULE ina219
+OBJECT MODULE PLACED IN .\Objects\ina219.obj
+COMPILER INVOKED BY: E:\Eng_Software\Keil_v5\C251\BIN\C251.EXE ina219.c XSMALL BROWSE INCDIR(D:\1DKN\big4\Wireless_Energ
+                    -y_Consumption_Detector\Sources\inc) DEBUG PRINT(.\Listings\ina219.lst) TABS(2) OBJECT(.\Objects\ina219.obj) 
+
+stmt  level    source
+
+    1          
+    2          #include "config.h"
+    3          
+    4          float bus_volt =0 ;
+    5          float shunt_volt =0;
+    6          float current =0;
+    7          float power_w =0;
+    8          u8 buf[32];
+    9          
+   10          //向INA219寄存器写入16位数据
+   11          
+   12          static void INA219_WriteReg(uint8_t reg_addr, uint16_t dat)
+   13          {
+   14   1          while (I2C_CheckMasterBusy());  // 等待I2C总线空闲
+   15   1          I2C_ClearMasterFlag();          // 清除完成标志
+   16   1          
+   17   1          // 发送I2C起始信号+设备写地址
+   18   1          I2C_MasterStartSendByte(INA219_I2C_ADDR << 1);
+   19   1          // 发送寄存器地址
+   20   1          I2C_MasterSendByte(reg_addr);
+   21   1          // 发送高8位数据
+   22   1          I2C_MasterSendByte((dat >> 8) & 0xFF);
+   23   1          // 发送低8位数据
+   24   1          I2C_MasterSendByte(dat & 0xFF);
+   25   1          
+   26   1          I2C_MasterStop();               // 发送停止信号
+   27   1      }
+   28          
+   29          //从INA219寄存器读取16位数据
+   30          
+   31          static uint16_t INA219_ReadReg(uint8_t reg_addr)
+   32          {
+   33   1          uint16_t dat = 0;
+   34   1          
+   35   1          while (I2C_CheckMasterBusy()); 
+   36   1          I2C_ClearMasterFlag();
+   37   1          I2C_MasterStartSendByte(INA219_I2C_ADDR << 1);
+   38   1          I2C_MasterSendByte(reg_addr);
+   39   1          
+   40   1          // 发送重复起始信号+设备读地址
+   41   1          I2C_MasterStartSendByte((INA219_I2C_ADDR << 1) | 0x01);
+   42   1          // 读取高8位（发送ACK）
+   43   1          dat = (uint16_t)I2C_MasterReadByte(0) << 8;
+   44   1          // 读取低8位（发送NAK）
+   45   1          dat |= (uint16_t)I2C_MasterReadByte(1);
+   46   1          
+   47   1          I2C_MasterStop();  // 发送停止信号
+   48   1          
+   49   1          return dat;
+   50   1      }
+   51          
+   52          //初始化INA219芯片
+   53          void INA219_Init(void)
+   54          {
+   55   1          INA219_WriteReg(INA219_REG_CONFIG, 0x07FF); // 0x07FF = 0000 0111 1111 1111
+   56   1          INA219_WriteReg(INA219_REG_CALIBRATION, INA219_CALIBRATION_VAL);
+   57   1      }
+   58          
+C251 COMPILER V5.60.0,  ina219                                                             25/05/26  11:17:20  PAGE 2   
+
+   59          //读取INA219分流电压（mV）
+   60          
+   61          float INA219_ReadShuntVoltage(void)
+   62          {
+   63   1          int16_t voltage = (int16_t)INA219_ReadReg(INA219_REG_SHUNTVOLT);
+   64   1          // 分流电压LSB = 10uV，转换为mV需除以100
+   65   1          return (voltage * 0.01f);
+   66   1      }
+   67          
+   68          //读取INA219总线电压（V）
+   69          float INA219_ReadBusVoltage(void)
+   70          {
+   71   1          uint16_t voltage = INA219_ReadReg(INA219_REG_BUSVOLT);
+   72   1          // 总线电压LSB = 4mV，需右移3位舍弃状态位后乘以4
+   73   1          
+   74   1          return ((voltage >> 3) * 0.004f);
+   75   1      }
+   76          
+   77          //读取INA219电流值（mA）
+   78          
+   79          float INA219_ReadCurrent(void)
+   80          {
+   81   1          // 电流LSB由校准值决定，示例中校准值4096对应1mA/LSB
+   82   1          int16_t raw = (int16_t)INA219_ReadReg(INA219_REG_CURRENT);
+   83   1          return raw * INA219_CURRENT_LSB *1004;
+   84   1      }
+   85          
+   86          //读取INA219功率值（mW）
+   87          
+   88          float INA219_ReadPower(void)
+   89          {
+   90   1          // 功率LSB = 20*电流LSB（示例中为20mW/LSB）
+   91   1          uint16_t raw = INA219_ReadReg(INA219_REG_POWER);
+   92   1          return raw * INA219_POWER_LSB *994;
+   93   1      }
+   94          
+   95          
+   96          // 串口1输出INA219采集数据
+   97          void INA219_SendDataToUART4(void)
+   98          {
+   99   1      
+  100   1        bus_volt = INA219_ReadBusVoltage();
+  101   1        shunt_volt = INA219_ReadShuntVoltage();
+  102   1        current = INA219_ReadCurrent();
+  103   1        power_w = INA219_ReadPower();
+  104   1      
+  105   1          
+  106   1      //格式化输出
+  107   1        printf("RTC Time: %04d-%02d-%02d %02d:%02d:%02d\r\n", 
+  108   1        2000 + RTC_ReadYear(), RTC_ReadMonth(), RTC_ReadDay(), 
+  109   1        RTC_ReadHour(), RTC_ReadMinute(), RTC_ReadSecond());
+  110   1          printf("INA219 Data:\r\n");
+  111   1          printf("Bus Voltage: %.3f V\r\n", bus_volt);
+  112   1          printf("Shunt Voltage: %.3f mV\r\n", shunt_volt);
+  113   1          printf("Current: %.3f mA\r\n", current);
+  114   1          printf("Power_w: %.3f mW\r\n\r\n", power_w);
+  115   1        
+  116   1        
+  117   1        if( (uint16_t)power_w > CanShu[0] )
+  118   1        {
+  119   2          B_AVA_LM =1;
+  120   2        }
+  121   1      }
+
+
+Module Information          Static   Overlayable
+------------------------------------------------
+C251 COMPILER V5.60.0,  ina219                                                             25/05/26  11:17:20  PAGE 3   
+
+  code size            =       468     ------
+  ecode size           =    ------     ------
+  data size            =    ------     ------
+  idata size           =    ------     ------
+  pdata size           =    ------     ------
+  xdata size           =    ------     ------
+  xdata-const size     =    ------     ------
+  edata size           =        48     ------
+  bit size             =    ------     ------
+  ebit size            =    ------     ------
+  bitaddressable size  =    ------     ------
+  ebitaddressable size =    ------     ------
+  far data size        =    ------     ------
+  huge data size       =    ------     ------
+  const size           =    ------     ------
+  hconst size          =       176     ------
+End of Module Information.
+
+
+C251 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,106 @@
+C251 COMPILER V5.60.0,  timer                                                              25/05/26  11:17:19  PAGE 1   
+
+
+C251 COMPILER V5.60.0, COMPILATION OF MODULE timer
+OBJECT MODULE PLACED IN .\Objects\timer.obj
+COMPILER INVOKED BY: E:\Eng_Software\Keil_v5\C251\BIN\C251.EXE Sources\timer.c XSMALL BROWSE INCDIR(D:\1DKN\big4\Wireles
+                    -s_Energy_Consumption_Detector\Sources\inc) DEBUG PRINT(.\Listings\timer.lst) TABS(2) OBJECT(.\Objects\timer.obj) 
+
+stmt  level    source
+
+    1          //<<AICUBE_USER_HEADER_REMARK_BEGIN>>
+    2          ////////////////////////////////////////
+    3          // 在此添加用户文件头说明信息  
+    4          // 文件名称: timer.c
+    5          // 文件描述: 
+    6          // 文件版本: V1.0
+    7          // 修改记录:
+    8          //   1. (2026-05-03) 创建文件
+    9          ////////////////////////////////////////
+   10          //<<AICUBE_USER_HEADER_REMARK_END>>
+   11          
+   12          
+   13          #include "config.h"
+   14          
+   15          
+   16          //<<AICUBE_USER_INCLUDE_BEGIN>>
+   17          // 在此添加用户头文件包含  
+   18          //<<AICUBE_USER_INCLUDE_END>>
+   19          
+   20          
+   21          //<<AICUBE_USER_GLOBAL_DEFINE_BEGIN>>
+   22          bit T0_1ms =0;            //1ms标志
+   23          //<<AICUBE_USER_GLOBAL_DEFINE_END>>
+   24          
+   25          
+   26          
+   27          ////////////////////////////////////////
+   28          // 定时器0初始化函数
+   29          // 入口参数: 无
+   30          // 函数返回: 无
+   31          ////////////////////////////////////////
+   32          void TIMER0_Init(void)
+   33          {
+   34   1      #define T0_PSCR                 (1)
+   35   1      #define T0_RELOAD               (65536 - (float)SYSCLK / (T0_PSCR + 1) * 1 / 1000) //定时周期1毫秒
+   36   1      
+   37   1          TIMER0_TimerMode();                 //设置定时器0为定时模式
+   38   1          TIMER0_1TMode();                    //设置定时器0为1T模式
+   39   1          TIMER0_Mode0();                     //设置定时器0为模式0 (16位自动重载模式)
+   40   1          TIMER0_DisableGateINT0();           //禁止定时器0门控
+   41   1          TIMER0_SetIntPriority(3);           //设置中断为最高优先级
+   42   1          TIMER0_EnableInt();                 //使能定时器0中断
+   43   1          TIMER0_SetPrescale(T0_PSCR);        //设置定时器0的8位预分频
+   44   1          TIMER0_SetReload16(T0_RELOAD);      //设置定时器0的16位重载值
+   45   1          TIMER0_Run();                       //定时器0开始运行
+   46   1      
+   47   1          //<<AICUBE_USER_TIMER0_INITIAL_BEGIN>>
+   48   1          // 在此添加用户初始化代码  
+   49   1          //<<AICUBE_USER_TIMER0_INITIAL_END>>
+   50   1      }
+   51          
+   52          
+   53          ////////////////////////////////////////
+   54          // 定时器0中断服务程序
+   55          // 入口参数: 无
+   56          // 函数返回: 无
+   57          ////////////////////////////////////////
+   58          void TIMER0_ISR(void) interrupt TMR0_VECTOR
+C251 COMPILER V5.60.0,  timer                                                              25/05/26  11:17:19  PAGE 2   
+
+   59          {
+   60   1          //<<AICUBE_USER_TIMER0_ISR_CODE1_BEGIN>>
+   61   1        T0_1ms = 1;
+   62   1          //<<AICUBE_USER_TIMER0_ISR_CODE1_END>>
+   63   1      }
+   64          
+   65          
+   66          //<<AICUBE_USER_FUNCTION_IMPLEMENT_BEGIN>>
+   67          // 在此添加用户函数实现代码  
+   68          //<<AICUBE_USER_FUNCTION_IMPLEMENT_END>>
+   69          
+   70          
+
+
+Module Information          Static   Overlayable
+------------------------------------------------
+  code size            =        54     ------
+  ecode size           =    ------     ------
+  data size            =    ------     ------
+  idata size           =    ------     ------
+  pdata size           =    ------     ------
+  xdata size           =    ------     ------
+  xdata-const size     =    ------     ------
+  edata size           =    ------     ------
+  bit size             =         1     ------
+  ebit size            =    ------     ------
+  bitaddressable size  =    ------     ------
+  ebitaddressable size =    ------     ------
+  far data size        =    ------     ------
+  huge data size       =    ------     ------
+  const size           =    ------     ------
+  hconst size          =    ------     ------
+End of Module Information.
+
+
+C251 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

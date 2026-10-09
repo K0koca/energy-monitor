@@ -1,0 +1,200 @@
+C251 COMPILER V5.60.0,  port                                                               25/05/26  11:17:19  PAGE 1   
+
+
+C251 COMPILER V5.60.0, COMPILATION OF MODULE port
+OBJECT MODULE PLACED IN .\Objects\port.obj
+COMPILER INVOKED BY: E:\Eng_Software\Keil_v5\C251\BIN\C251.EXE Sources\port.c XSMALL BROWSE INCDIR(D:\1DKN\big4\Wireless
+                    -_Energy_Consumption_Detector\Sources\inc) DEBUG PRINT(.\Listings\port.lst) TABS(2) OBJECT(.\Objects\port.obj) 
+
+stmt  level    source
+
+    1          //<<AICUBE_USER_HEADER_REMARK_BEGIN>>
+    2          ////////////////////////////////////////
+    3          // ÔÚ´ËÌí¼ÓÓÃ»§ÎÄ¼şÍ·ËµÃ÷ĞÅÏ¢  
+    4          // ÎÄ¼şÃû³Æ: port.c
+    5          // ÎÄ¼şÃèÊö: 
+    6          // ÎÄ¼ş°æ±¾: V1.0
+    7          // ĞŞ¸Ä¼ÇÂ¼:
+    8          //   1. (2026-05-03) ´´½¨ÎÄ¼ş
+    9          
+   10          
+   11          #include "config.h"
+   12          
+   13          ////////////////////////////////////////
+   14          // P0¿Ú³õÊ¼»¯º¯Êı
+   15          // Èë¿Ú²ÎÊı: ÎŞ
+   16          // º¯Êı·µ»Ø: ÎŞ
+   17          ////////////////////////////////////////
+   18          void PORT0_Init(void)
+   19          {
+   20   1          SetP0nInitLevelHigh(PIN_7 | PIN_6 | PIN_5 | PIN_4 | PIN_3 | PIN_2 | PIN_1); //ÉèÖÃP0.7,P0.6,P0.5,P0.4
+             -,P0.3,P0.2,P0.1³õÊ¼»¯µçÆ½
+   21   1          SetP0nInitLevelLow(PIN_0);          //ÉèÖÃP0.0³õÊ¼»¯µçÆ½
+   22   1          SetP0nQuasiMode(PIN_7 | PIN_6 | PIN_5 | PIN_4 | PIN_3 | PIN_2); //ÉèÖÃP0.7,P0.6,P0.5,P0.4,P0.3,P0.2Îª
+             -×¼Ë«Ïò¿ÚÄ£Ê½
+   23   1          SetP0nPushPullMode(PIN_1 | PIN_0);  //ÉèÖÃP0.1,P0.0ÎªÍÆÍìÊä³öÄ£Ê½
+   24   1          SetP0nManualMode(PIN_ALL);          //ÉèÖÃP0ÊÖ¶¯ÅäÖÃ¶Ë¿ÚÄ£Ê½
+   25   1      
+   26   1          DisableP0nPullUp(PIN_ALL);          //¹Ø±ÕP0ÄÚ²¿ÉÏÀ­µç×è
+   27   1          DisableP0nPullDown(PIN_ALL);        //¹Ø±ÕP0ÄÚ²¿ÏÂÀ­µç×è
+   28   1          EnableP0nSchmitt(PIN_ALL);          //Ê¹ÄÜP0Ê©ÃÜÌØ´¥·¢
+   29   1          SetP0nSlewRateNormal(PIN_ALL);      //ÉèÖÃP0Ò»°ã·­×ªËÙ¶È
+   30   1          SetP0nDrivingNormal(PIN_7 | PIN_6 | PIN_5 | PIN_4 | PIN_3 | PIN_2); //ÉèÖÃP0.7,P0.6,P0.5,P0.4,P0.3,P0
+             -.2Ò»°ãÇı¶¯ÄÜÁ¦
+   31   1          SetP0nDrivingStrong(PIN_1 | PIN_0); //ÉèÖÃP0.1,P0.0ÔöÇ¿Çı¶¯ÄÜÁ¦
+   32   1          SetP0nDigitalInput(PIN_ALL);        //Ê¹ÄÜP0Êı×ÖĞÅºÅÊäÈë¹¦ÄÜ
+   33   1      
+   34   1      
+   35   1      }
+   36          
+   37          ////////////////////////////////////////
+   38          // P1¿Ú³õÊ¼»¯º¯Êı
+   39          // Èë¿Ú²ÎÊı: ÎŞ
+   40          // º¯Êı·µ»Ø: ÎŞ
+   41          ////////////////////////////////////////
+   42          void PORT1_Init(void)
+   43          {
+   44   1          SetP1nInitLevelHigh(PIN_ALL);       //ÉèÖÃP1³õÊ¼»¯µçÆ½
+   45   1          SetP1nQuasiMode(PIN_7 | PIN_6 | PIN_3 | PIN_2 | PIN_0); //ÉèÖÃP1.7,P1.6,P1.3,P1.2,P1.0Îª×¼Ë«Ïò¿ÚÄ£Ê½
+   46   1          SetP1nOpenDrainMode(PIN_5 | PIN_4 | PIN_1); //ÉèÖÃP1.5,P1.4,P1.1Îª¿ªÂ©Ä£Ê½
+   47   1          SetP1nManualMode(PIN_ALL);          //ÉèÖÃP1ÊÖ¶¯ÅäÖÃ¶Ë¿ÚÄ£Ê½
+   48   1      
+   49   1          DisableP1nPullUp(PIN_ALL);          //¹Ø±ÕP1ÄÚ²¿ÉÏÀ­µç×è
+   50   1          DisableP1nPullDown(PIN_ALL);        //¹Ø±ÕP1ÄÚ²¿ÏÂÀ­µç×è
+   51   1          EnableP1nSchmitt(PIN_ALL);          //Ê¹ÄÜP1Ê©ÃÜÌØ´¥·¢
+   52   1          SetP1nSlewRateNormal(PIN_ALL);      //ÉèÖÃP1Ò»°ã·­×ªËÙ¶È
+   53   1          SetP1nDrivingNormal(PIN_7 | PIN_6 | PIN_3 | PIN_2 | PIN_0); //ÉèÖÃP1.7,P1.6,P1.3,P1.2,P1.0Ò»°ãÇı¶¯ÄÜÁ
+             -¦
+   54   1          SetP1nDrivingStrong(PIN_5 | PIN_4 | PIN_1); //ÉèÖÃP1.5,P1.4,P1.1ÔöÇ¿Çı¶¯ÄÜÁ¦
+C251 COMPILER V5.60.0,  port                                                               25/05/26  11:17:19  PAGE 2   
+
+   55   1          SetP1nDigitalInput(PIN_ALL);        //Ê¹ÄÜP1Êı×ÖĞÅºÅÊäÈë¹¦ÄÜ
+   56   1      
+   57   1      
+   58   1      }
+   59          
+   60          ////////////////////////////////////////
+   61          // P2¿Ú³õÊ¼»¯º¯Êı
+   62          // Èë¿Ú²ÎÊı: ÎŞ
+   63          // º¯Êı·µ»Ø: ÎŞ
+   64          ////////////////////////////////////////
+   65          void PORT2_Init(void)
+   66          {
+   67   1          SetP2nInitLevelHigh(PIN_ALL);       //ÉèÖÃP2³õÊ¼»¯µçÆ½
+   68   1          SetP2nQuasiMode(PIN_ALL);           //ÉèÖÃP2Îª×¼Ë«Ïò¿ÚÄ£Ê½
+   69   1          SetP2nManualMode(PIN_ALL);          //ÉèÖÃP2ÊÖ¶¯ÅäÖÃ¶Ë¿ÚÄ£Ê½
+   70   1      
+   71   1          DisableP2nPullUp(PIN_ALL);          //¹Ø±ÕP2ÄÚ²¿ÉÏÀ­µç×è
+   72   1          DisableP2nPullDown(PIN_ALL);        //¹Ø±ÕP2ÄÚ²¿ÏÂÀ­µç×è
+   73   1          EnableP2nSchmitt(PIN_ALL);          //Ê¹ÄÜP2Ê©ÃÜÌØ´¥·¢
+   74   1          SetP2nSlewRateNormal(PIN_ALL);      //ÉèÖÃP2Ò»°ã·­×ªËÙ¶È
+   75   1          SetP2nDrivingNormal(PIN_ALL);       //ÉèÖÃP2Ò»°ãÇı¶¯ÄÜÁ¦
+   76   1          SetP2nDigitalInput(PIN_ALL);        //Ê¹ÄÜP2Êı×ÖĞÅºÅÊäÈë¹¦ÄÜ
+   77   1      
+   78   1          //<<AICUBE_USER_PORT2_INITIAL_BEGIN>>
+   79   1          // ÔÚ´ËÌí¼ÓÓÃ»§³õÊ¼»¯´úÂë  
+   80   1          //<<AICUBE_USER_PORT2_INITIAL_END>>
+   81   1      }
+   82          
+   83          ////////////////////////////////////////
+   84          // P3¿Ú³õÊ¼»¯º¯Êı
+   85          // Èë¿Ú²ÎÊı: ÎŞ
+   86          // º¯Êı·µ»Ø: ÎŞ
+   87          ////////////////////////////////////////
+   88          void PORT3_Init(void)
+   89          {
+   90   1          SetP3nInitLevelHigh(PIN_ALL);       //ÉèÖÃP3³õÊ¼»¯µçÆ½
+   91   1          SetP3nQuasiMode(PIN_ALL);           //ÉèÖÃP3Îª×¼Ë«Ïò¿ÚÄ£Ê½
+   92   1          SetP3nManualMode(PIN_ALL);          //ÉèÖÃP3ÊÖ¶¯ÅäÖÃ¶Ë¿ÚÄ£Ê½
+   93   1      
+   94   1          DisableP3nPullUp(PIN_ALL);          //¹Ø±ÕP3ÄÚ²¿ÉÏÀ­µç×è
+   95   1          DisableP3nPullDown(PIN_ALL);        //¹Ø±ÕP3ÄÚ²¿ÏÂÀ­µç×è
+   96   1          EnableP3nSchmitt(PIN_ALL);          //Ê¹ÄÜP3Ê©ÃÜÌØ´¥·¢
+   97   1          SetP3nSlewRateNormal(PIN_ALL);      //ÉèÖÃP3Ò»°ã·­×ªËÙ¶È
+   98   1          SetP3nDrivingNormal(PIN_ALL);       //ÉèÖÃP3Ò»°ãÇı¶¯ÄÜÁ¦
+   99   1          SetP3nDigitalInput(PIN_ALL);        //Ê¹ÄÜP3Êı×ÖĞÅºÅÊäÈë¹¦ÄÜ
+  100   1      
+  101   1          //<<AICUBE_USER_PORT3_INITIAL_BEGIN>>
+  102   1          // ÔÚ´ËÌí¼ÓÓÃ»§³õÊ¼»¯´úÂë  
+  103   1          //<<AICUBE_USER_PORT3_INITIAL_END>>
+  104   1      }
+  105          
+  106          ////////////////////////////////////////
+  107          // P4¿Ú³õÊ¼»¯º¯Êı
+  108          // Èë¿Ú²ÎÊı: ÎŞ
+  109          // º¯Êı·µ»Ø: ÎŞ
+  110          ////////////////////////////////////////
+  111          void PORT4_Init(void)
+  112          {
+  113   1          SetP4nInitLevelHigh(PIN_ALL);       //ÉèÖÃP4³õÊ¼»¯µçÆ½
+  114   1          SetP4nQuasiMode(PIN_ALL);           //ÉèÖÃP4Îª×¼Ë«Ïò¿ÚÄ£Ê½
+  115   1          SetP4nManualMode(PIN_ALL);          //ÉèÖÃP4ÊÖ¶¯ÅäÖÃ¶Ë¿ÚÄ£Ê½
+  116   1      
+  117   1          DisableP4nPullUp(PIN_ALL);          //¹Ø±ÕP4ÄÚ²¿ÉÏÀ­µç×è
+  118   1          DisableP4nPullDown(PIN_ALL);        //¹Ø±ÕP4ÄÚ²¿ÏÂÀ­µç×è
+  119   1          EnableP4nSchmitt(PIN_ALL);          //Ê¹ÄÜP4Ê©ÃÜÌØ´¥·¢
+  120   1          SetP4nSlewRateNormal(PIN_ALL);      //ÉèÖÃP4Ò»°ã·­×ªËÙ¶È
+C251 COMPILER V5.60.0,  port                                                               25/05/26  11:17:19  PAGE 3   
+
+  121   1          SetP4nDrivingNormal(PIN_ALL);       //ÉèÖÃP4Ò»°ãÇı¶¯ÄÜÁ¦
+  122   1          SetP4nDigitalInput(PIN_ALL);        //Ê¹ÄÜP4Êı×ÖĞÅºÅÊäÈë¹¦ÄÜ
+  123   1      
+  124   1          //<<AICUBE_USER_PORT4_INITIAL_BEGIN>>
+  125   1          // ÔÚ´ËÌí¼ÓÓÃ»§³õÊ¼»¯´úÂë  
+  126   1          //<<AICUBE_USER_PORT4_INITIAL_END>>
+  127   1      }
+  128          
+  129          ////////////////////////////////////////
+  130          // P5¿Ú³õÊ¼»¯º¯Êı
+  131          // Èë¿Ú²ÎÊı: ÎŞ
+  132          // º¯Êı·µ»Ø: ÎŞ
+  133          ////////////////////////////////////////
+  134          void PORT5_Init(void)
+  135          {
+  136   1          SetP5nInitLevelHigh(PIN_ALL);       //ÉèÖÃP5³õÊ¼»¯µçÆ½
+  137   1          SetP5nQuasiMode(PIN_ALL);           //ÉèÖÃP5Îª×¼Ë«Ïò¿ÚÄ£Ê½
+  138   1          SetP5nManualMode(PIN_ALL);          //ÉèÖÃP5ÊÖ¶¯ÅäÖÃ¶Ë¿ÚÄ£Ê½
+  139   1      
+  140   1          DisableP5nPullUp(PIN_ALL);          //¹Ø±ÕP5ÄÚ²¿ÉÏÀ­µç×è
+  141   1          DisableP5nPullDown(PIN_ALL);        //¹Ø±ÕP5ÄÚ²¿ÏÂÀ­µç×è
+  142   1          EnableP5nSchmitt(PIN_ALL);          //Ê¹ÄÜP5Ê©ÃÜÌØ´¥·¢
+  143   1          SetP5nSlewRateNormal(PIN_ALL);      //ÉèÖÃP5Ò»°ã·­×ªËÙ¶È
+  144   1          SetP5nDrivingNormal(PIN_ALL);       //ÉèÖÃP5Ò»°ãÇı¶¯ÄÜÁ¦
+  145   1          SetP5nDigitalInput(PIN_ALL);        //Ê¹ÄÜP5Êı×ÖĞÅºÅÊäÈë¹¦ÄÜ
+  146   1      
+  147   1          //<<AICUBE_USER_PORT5_INITIAL_BEGIN>>
+  148   1          // ÔÚ´ËÌí¼ÓÓÃ»§³õÊ¼»¯´úÂë  
+  149   1          //<<AICUBE_USER_PORT5_INITIAL_END>>
+  150   1      }
+  151          
+  152          
+  153          
+  154          //<<AICUBE_USER_FUNCTION_IMPLEMENT_BEGIN>>
+  155          // ÔÚ´ËÌí¼ÓÓÃ»§º¯ÊıÊµÏÖ´úÂë  
+  156          //<<AICUBE_USER_FUNCTION_IMPLEMENT_END>>
+  157          
+  158          
+
+
+Module Information          Static   Overlayable
+------------------------------------------------
+  code size            =       453     ------
+  ecode size           =    ------     ------
+  data size            =    ------     ------
+  idata size           =    ------     ------
+  pdata size           =    ------     ------
+  xdata size           =    ------     ------
+  xdata-const size     =    ------     ------
+  edata size           =    ------     ------
+  bit size             =    ------     ------
+  ebit size            =    ------     ------
+  bitaddressable size  =    ------     ------
+  ebitaddressable size =    ------     ------
+  far data size        =    ------     ------
+  huge data size       =    ------     ------
+  const size           =    ------     ------
+  hconst size          =    ------     ------
+End of Module Information.
+
+
+C251 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,235 @@
+C251 COMPILER V5.60.0,  i2c                                                                25/05/26  11:17:20  PAGE 1   
+
+
+C251 COMPILER V5.60.0, COMPILATION OF MODULE i2c
+OBJECT MODULE PLACED IN .\Objects\i2c.obj
+COMPILER INVOKED BY: E:\Eng_Software\Keil_v5\C251\BIN\C251.EXE Sources\i2c.c XSMALL BROWSE INCDIR(D:\1DKN\big4\Wireless_
+                    -Energy_Consumption_Detector\Sources\inc) DEBUG PRINT(.\Listings\i2c.lst) TABS(2) OBJECT(.\Objects\i2c.obj) 
+
+stmt  level    source
+
+    1          //<<AICUBE_USER_HEADER_REMARK_BEGIN>>
+    2          ////////////////////////////////////////
+    3          // 在此添加用户文件头说明信息  
+    4          // 文件名称: i2c.c
+    5          // 文件描述: 
+    6          // 文件版本: V1.0
+    7          // 修改记录:
+    8          //   1. (2026-05-03) 创建文件
+    9          ////////////////////////////////////////
+   10          //<<AICUBE_USER_HEADER_REMARK_END>>
+   11          
+   12          
+   13          #include "config.h"
+   14          
+   15          
+   16          //<<AICUBE_USER_INCLUDE_BEGIN>>
+   17          // 在此添加用户头文件包含  
+   18          //<<AICUBE_USER_INCLUDE_END>>
+   19          
+   20          
+   21          //<<AICUBE_USER_GLOBAL_DEFINE_BEGIN>>
+   22          // 在此添加用户全局变量定义、用户宏定义以及函数声明  
+   23          //<<AICUBE_USER_GLOBAL_DEFINE_END>>
+   24          
+   25          
+   26          
+   27          ////////////////////////////////////////
+   28          // I2C初始化函数
+   29          // 入口参数: 无
+   30          // 函数返回: 无
+   31          ////////////////////////////////////////
+   32          void I2C_Init(void)
+   33          {
+   34   1          I2C_SwitchP3332();                  //选择I2C数据口: SCL(P3.2), SDA(P3.3)
+   35   1      
+   36   1          I2C_MasterMode();                   //设置I2C为主机模式
+   37   1          I2C_SetClockDivider(98);            //设置I2C为主机模式时钟
+   38   1      
+   39   1          I2C_Enable();                       //使能I2C功能
+   40   1      
+   41   1          //<<AICUBE_USER_I2C_INITIAL_BEGIN>>
+   42   1          // 在此添加用户初始化代码  
+   43   1          //<<AICUBE_USER_I2C_INITIAL_END>>
+   44   1      }
+   45          
+   46          ////////////////////////////////////////
+   47          // I2C主机模式等待命令完成
+   48          // 入口参数: 无
+   49          // 函数返回: 无
+   50          ////////////////////////////////////////
+   51          void I2C_MasterWait(void)
+   52          {
+   53   1          while (!I2C_CheckMasterFlag());     //等待完成标志
+   54   1          I2C_ClearMasterFlag();              //清除完成标志
+   55   1          I2C_Idle();                         //恢复IDLE状态
+   56   1      }
+   57          
+   58          ////////////////////////////////////////
+C251 COMPILER V5.60.0,  i2c                                                                25/05/26  11:17:20  PAGE 2   
+
+   59          // I2C主机模式发送起始信号
+   60          // 入口参数: 无
+   61          // 函数返回: 无
+   62          ////////////////////////////////////////
+   63          void I2C_MasterStart(void)
+   64          {
+   65   1          I2C_Start();                        //触发主机模式起始命令
+   66   1          I2C_MasterWait();                   //等待命令完成
+   67   1      }
+   68          
+   69          ////////////////////////////////////////
+   70          // I2C主机模式发送停止信号
+   71          // 入口参数: 无
+   72          // 函数返回: 无
+   73          ////////////////////////////////////////
+   74          void I2C_MasterStop(void)
+   75          {
+   76   1          I2C_Stop();                         //触发主机模式停止命令
+   77   1          I2C_MasterWait();                   //等待命令完成
+   78   1      }
+   79          
+   80          ////////////////////////////////////////
+   81          // I2C主机模式发送起始信号+1字节数据
+   82          // 入口参数: dat (待发送的字节数据)
+   83          // 函数返回: 0   (接收的应答信号为ACK)
+   84          //           1   (接收的应答信号为NAK)
+   85          ////////////////////////////////////////
+   86          BOOL I2C_MasterStartSendByte(uint8_t dat)
+   87          {
+   88   1          I2C_WriteData(dat);                 //将数据写入I2C数据寄存器
+   89   1          I2C_StartSendDataRecvACK();         //触发主机模式起始信号+写数据+读取ACK组合命令
+   90   1          I2C_MasterWait();                   //等待命令完成
+   91   1      
+   92   1          return I2C_MasterReadACK();         //读取并返回应答信号
+   93   1      }
+   94          
+   95          ////////////////////////////////////////
+   96          // I2C主机模式发送1字节数据
+   97          // 入口参数: dat (待发送的字节数据)
+   98          // 函数返回: 0   (接收的应答信号为ACK)
+   99          //           1   (接收的应答信号为NAK)
+  100          ////////////////////////////////////////
+  101          BOOL I2C_MasterSendByte(uint8_t dat)
+  102          {
+  103   1          I2C_WriteData(dat);                 //将数据写入I2C数据寄存器
+  104   1          I2C_SendDataRecvACK();              //触发主机模式写数据+读取ACK组合命令
+  105   1          I2C_MasterWait();                   //等待命令完成
+  106   1      
+  107   1          return I2C_MasterReadACK();         //读取并返回应答信号
+  108   1      }
+  109          
+  110          ////////////////////////////////////////
+  111          // I2C主机模式接收1字节数据
+  112          // 入口参数: ack (待发送的应答信号)
+  113          // 函数返回:     (接收的字节数据)
+  114          ////////////////////////////////////////
+  115          uint8_t I2C_MasterReadByte(BOOL ack)
+  116          {
+  117   1          uint8_t dat;
+  118   1      
+  119   1          if (!ack)
+  120   1              I2C_RecvDataSendACK();          //触发主机模式读数据+返回ACK命令
+  121   1          else
+  122   1              I2C_RecvDataSendNAK();          //触发主机模式读数据+返回NAK命令
+  123   1          I2C_MasterWait();                   //等待命令完成
+  124   1          dat = I2C_ReadData();               //读取接收的数据
+C251 COMPILER V5.60.0,  i2c                                                                25/05/26  11:17:20  PAGE 3   
+
+  125   1      
+  126   1          return dat;                         //返回接收的数据
+  127   1      }
+  128          
+  129          ////////////////////////////////////////
+  130          // I2C读AT24C02函数
+  131          // 入口参数: addr (EEPROM目标地址)
+  132          //           dat  (数据缓冲区)
+  133          //           size (数据大小)
+  134          // 函数返回: 无
+  135          ////////////////////////////////////////
+  136          #define AT24C02_SLAW            0xa0    //写设备地址
+  137          #define AT24C02_SLAR            0xa1    //读设备地址
+  138          #define AT24C02_PAGE_SIZE       8       //页编程大小
+  139          
+  140          void I2C_ReadAT24C02(uint8_t addr, uint8_t *dat, uint8_t size)
+  141          {
+  142   1          while (I2C_CheckMasterBusy());      //等待I2C模块退出忙状态
+  143   1          I2C_ClearMasterFlag();              //清除完成标志
+  144   1          // DMA_I2C_DisableDMA();            //如果已使能DMA，此处必须禁止DMA，寄存器操作模式才可正常工作
+  145   1      
+  146   1          I2C_MasterStartSendByte(AT24C02_SLAW); //发送起始信号+设备写信号
+  147   1          I2C_MasterSendByte(addr);           //发送地址信息
+  148   1      
+  149   1          I2C_MasterStartSendByte(AT24C02_SLAR); //发送起始信号+设备读信号
+  150   1          while (size--)                      //判断数据是否读取完成
+  151   1          {
+  152   2              *dat++ = I2C_MasterReadByte(!size); //读取数据
+  153   2          }
+  154   1      
+  155   1          I2C_MasterStop();                   //发送停止信号
+  156   1      }
+  157          
+  158          ////////////////////////////////////////
+  159          // I2C写AT24C02函数
+  160          // 入口参数: addr (EEPROM目标地址)
+  161          //           dat  (数据缓冲区)
+  162          //           size (数据大小)
+  163          // 函数返回: 无
+  164          ////////////////////////////////////////
+  165          void I2C_WriteAT24C02(uint8_t addr, uint8_t *dat, uint8_t size)
+  166          {
+  167   1          while (I2C_CheckMasterBusy());      //等待I2C模块退出忙状态
+  168   1          I2C_ClearMasterFlag();              //清除完成标志
+  169   1          // DMA_I2C_DisableDMA();            //如果已使能DMA，此处必须禁止DMA，寄存器操作模式才可正常工作
+  170   1      
+  171   1          while (size)
+  172   1          {
+  173   2              I2C_MasterStartSendByte(AT24C02_SLAW); //发送起始信号+设备写信号
+  174   2              I2C_MasterSendByte(addr);       //发送地址信息
+  175   2              while (size)                    //判断数据是否发送完成
+  176   2              {
+  177   3                  I2C_MasterSendByte(*dat++); //发送数据
+  178   3                  size--;
+  179   3                  addr++;
+  180   3                  if ((addr & (AT24C02_PAGE_SIZE - 1)) == 0)
+  181   3                      break;                  //防止跨页编程
+  182   3              }
+  183   2              I2C_MasterStop();               //发送停止信号
+  184   2      
+  185   2              delay_ms(5);                    //等待AT24C02编程完成
+  186   2          }
+  187   1      }
+  188          
+  189          
+  190          
+C251 COMPILER V5.60.0,  i2c                                                                25/05/26  11:17:20  PAGE 4   
+
+  191          //<<AICUBE_USER_FUNCTION_IMPLEMENT_BEGIN>>
+  192          // 在此添加用户函数实现代码  
+  193          //<<AICUBE_USER_FUNCTION_IMPLEMENT_END>>
+  194          
+  195          
+
+
+Module Information          Static   Overlayable
+------------------------------------------------
+  code size            =       485     ------
+  ecode size           =    ------     ------
+  data size            =    ------     ------
+  idata size           =    ------     ------
+  pdata size           =    ------     ------
+  xdata size           =    ------     ------
+  xdata-const size     =    ------     ------
+  edata size           =    ------          4
+  bit size             =    ------          1
+  ebit size            =    ------     ------
+  bitaddressable size  =    ------     ------
+  ebitaddressable size =    ------     ------
+  far data size        =    ------     ------
+  huge data size       =    ------     ------
+  const size           =    ------     ------
+  hconst size          =    ------     ------
+End of Module Information.
+
+
+C251 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

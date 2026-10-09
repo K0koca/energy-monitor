@@ -1,0 +1,19 @@
+{
+  "python.defaultInterpreterPath": "${workspaceFolder}\\.venv\\Scripts\\python.exe",
+  "python.terminal.activateEnvironment": true,
+  "python.envFile": "${workspaceFolder}\\.env",
+
+  "python.analysis.extraPaths": [
+    "${workspaceFolder}\\上位机",
+    "${workspaceFolder}\\上位机\\llm_energy_agent"
+  ],
+
+  "files.encoding": "utf8",
+  "files.autoGuessEncoding": true,
+
+  "[python]": {
+    "editor.formatOnSave": false
+  },
+
+  "terminal.integrated.cwd": "${workspaceFolder}"
+}

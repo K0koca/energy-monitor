@@ -1,0 +1,31 @@
+{
+  "provider": "cloud",
+
+  "cloud": {
+    "base_url": "https://open.bigmodel.cn/api/paas/v4",
+    "api_key": "",
+    "model": "glm-4-flash",
+    "temperature": 0.2,
+    "timeout": 90,
+    "supports_tools": true,
+    "network_retry": 3,
+    "retry_backoff": 1.5
+  },
+
+  "local": {
+    "base_url": "http://127.0.0.1:11434/v1",
+    "api_key": "ollama",
+    "model": "qwen3:8b",
+    "temperature": 0.2,
+    "timeout": 180,
+    "supports_tools": true,
+    "network_retry": 2,
+    "retry_backoff": 1.5
+  },
+
+  "db_path": "E:\\1DKN\\big4\\PythonProject\\上位机\\energy_monitor.db",
+
+  "max_tool_rounds": 6,
+  "max_sql_rows": 500,
+  "json_retry": 2
+}
